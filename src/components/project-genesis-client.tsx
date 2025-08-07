@@ -8,7 +8,7 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
+  Tooltip as RechartsTooltip,
   Legend,
   ResponsiveContainer,
 } from "recharts";
@@ -34,6 +34,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   UploadCloud,
   Loader2,
   FileText,
@@ -48,9 +54,11 @@ import {
   ArrowLeft,
   UserPlus,
   Search,
+  PlusCircle
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { ScrollArea, ScrollBar } from "./ui/scroll-area";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 type ProjectAnalysis = {
   analysis: {
@@ -330,62 +338,85 @@ export function ProjectGenesisClient() {
                 </div>
             </div>
             
-            <ScrollArea className="w-full pb-4">
-                <div className="flex gap-6">
-                    {analysisResult.projectBreakdown.map((part) => (
-                        <Card key={part.part} className="w-[350px] shrink-0">
-                            <CardHeader>
-                                <CardTitle>{part.part}</CardTitle>
-                                <CardDescription>{part.description}</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div>
-                                    <h4 className="text-sm font-semibold mb-2">Suggested Developer</h4>
-                                    <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
-                                        <div className="flex items-center gap-2">
-                                            <Avatar className="w-8 h-8">
-                                                <AvatarImage src={`https://placehold.co/100x100.png`} alt={part.suggestedDeveloper} data-ai-hint="person avatar"/>
-                                                <AvatarFallback>{part.suggestedDeveloper.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-                                            </Avatar>
-                                            <span className="font-medium">{part.suggestedDeveloper}</span>
+            <TooltipProvider>
+              <ScrollArea className="w-full pb-4">
+                  <div className="flex gap-6">
+                      {analysisResult.projectBreakdown.map((part) => (
+                          <Card key={part.part} className="w-[350px] shrink-0">
+                              <CardHeader>
+                                  <CardTitle>{part.part}</CardTitle>
+                                  <CardDescription>{part.description}</CardDescription>
+                              </CardHeader>
+                              <CardContent className="space-y-4">
+                                  <div>
+                                      <h4 className="text-sm font-semibold mb-2">Assigned Developers</h4>
+                                      <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
+                                          <div className="flex items-center gap-2">
+                                              <Avatar className="w-8 h-8">
+                                                  <AvatarImage src={`https://placehold.co/100x100.png`} alt={part.suggestedDeveloper} data-ai-hint="person avatar"/>
+                                                  <AvatarFallback>{part.suggestedDeveloper.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                              </Avatar>
+                                              <span className="font-medium">{part.suggestedDeveloper}</span>
+                                          </div>
+                                          <Button size="sm">Assign</Button>
+                                      </div>
+                                  </div>
+                                  
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button variant="outline" className="w-full justify-start">
+                                        <PlusCircle className="mr-2 h-4 w-4" />
+                                        Add developer
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-[300px] p-0" align="start">
+                                      <div className="p-2">
+                                        <div className="relative">
+                                          <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
+                                          <Input 
+                                              placeholder="Search developers..." 
+                                              className="pl-8" 
+                                              value={searchQuery}
+                                              onChange={(e) => setSearchQuery(e.target.value)}
+                                          />
                                         </div>
-                                        <Button size="sm">Assign</Button>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h4 className="text-sm font-semibold mb-2">Or add another developer</h4>
-                                    <div className="relative">
-                                        <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
-                                        <Input 
-                                            placeholder="Search developers..." 
-                                            className="pl-8" 
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                        />
-                                    </div>
-                                    <ScrollArea className="h-40 mt-2">
-                                        <div className="space-y-1 pr-4">
-                                        {filteredDevelopers.map(dev => (
-                                            <div key={dev.name} className="flex items-center justify-between p-2 rounded-md hover:bg-secondary">
-                                                <div className="flex items-center gap-2">
-                                                    <Avatar className="w-6 h-6">
-                                                        <AvatarImage src={`https://placehold.co/100x100.png`} alt={dev.name} data-ai-hint="person avatar small"/>
-                                                        <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-                                                    </Avatar>
-                                                    <span className="text-sm font-medium">{dev.name}</span>
-                                                </div>
-                                                 <Button variant="ghost" size="sm"><UserPlus className="mr-2 h-4 w-4"/>Add</Button>
-                                            </div>
-                                        ))}
-                                        </div>
-                                    </ScrollArea>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-                <ScrollBar orientation="horizontal" />
-            </ScrollArea>
+                                      </div>
+                                      <ScrollArea className="h-48">
+                                          <div className="space-y-1 p-2">
+                                          {filteredDevelopers.map(dev => (
+                                              <Tooltip key={dev.name} delayDuration={300}>
+                                                <TooltipTrigger asChild>
+                                                  <div className="flex items-center justify-between p-2 rounded-md hover:bg-secondary cursor-pointer">
+                                                      <div className="flex items-center gap-2">
+                                                          <Avatar className="w-6 h-6">
+                                                              <AvatarImage src={`https://placehold.co/100x100.png`} alt={dev.name} data-ai-hint="person avatar small"/>
+                                                              <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                                          </Avatar>
+                                                          <span className="text-sm font-medium">{dev.name}</span>
+                                                      </div>
+                                                      <Button variant="ghost" size="sm"><UserPlus className="h-4 w-4"/></Button>
+                                                  </div>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="right" align="center">
+                                                  <p className="font-semibold">Top Skills</p>
+                                                  <ul className="list-disc list-inside text-muted-foreground">
+                                                    {dev.skills.slice(0, 3).map(skill => <li key={skill}>{skill}</li>)}
+                                                  </ul>
+                                                </TooltipContent>
+                                              </Tooltip>
+                                          ))}
+                                          </div>
+                                      </ScrollArea>
+                                    </PopoverContent>
+                                  </Popover>
+
+                              </CardContent>
+                          </Card>
+                      ))}
+                  </div>
+                  <ScrollBar orientation="horizontal" />
+              </ScrollArea>
+            </TooltipProvider>
         </div>
     );
   };
