@@ -45,6 +45,7 @@ import {
   Newspaper,
   Lightbulb,
 } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 
 // Updated project analysis type
 type ProjectAnalysis = {
@@ -60,8 +61,8 @@ type ProjectAnalysis = {
     name: string;
     skills: string[];
     reasoning: string;
+    featureSuggestions: string[];
   }[];
-  featureSuggestions: string[];
 };
 
 type Developer = ProjectAnalysis["team"][0];
@@ -115,19 +116,11 @@ export function ProjectGenesisClient() {
         url: "https://github.com/example/project-genesis-app"
       },
       team: [
-        { name: 'Alice Johnson', skills: ['React', 'Next.js', 'TypeScript'], reasoning: 'Experienced in frontend development with a strong focus on building scalable React applications.' },
-        { name: 'Bob Williams', skills: ['Node.js', 'GraphQL', 'PostgreSQL'], reasoning: 'Skilled in backend services and database management, perfect for the API and data layers.' },
-        { name: 'Charlie Brown', skills: ['React Native', 'Firebase', 'Mobile UI/UX'], reasoning: 'Has a background in mobile development, which will be crucial for the native app version.' },
-        { name: 'David Lee', skills: ['AWS', 'Docker', 'CI/CD'], reasoning: 'DevOps expert to ensure smooth deployment and scaling.' },
-        { name: 'Eve Davis', skills: ['UI/UX Design', 'Figma', 'CSS'], reasoning: 'Specializes in creating intuitive and beautiful user interfaces.' },
-      ],
-      featureSuggestions: [
-        "User authentication and profile management.",
-        "A dynamic social feed for sharing pet photos.",
-        "Real-time chat functionality between users.",
-        "Map integration to display pet-friendly locations.",
-        "A system for users to review and rate locations.",
-        "Admin panel for content moderation.",
+        { name: 'Alice Johnson', skills: ['React', 'Next.js', 'TypeScript'], reasoning: 'Experienced in frontend development with a strong focus on building scalable React applications.', featureSuggestions: ["Implement user authentication and profile pages.", "Develop a responsive and dynamic social feed."] },
+        { name: 'Bob Williams', skills: ['Node.js', 'GraphQL', 'PostgreSQL'], reasoning: 'Skilled in backend services and database management, perfect for the API and data layers.', featureSuggestions: ["Design and build the database schema for users and posts.", "Create a GraphQL API for real-time chat functionality."] },
+        { name: 'Charlie Brown', skills: ['React Native', 'Firebase', 'Mobile UI/UX'], reasoning: 'Has a background in mobile development, which will be crucial for the native app version.', featureSuggestions: ["Develop a native mobile app for iOS and Android.", "Integrate push notifications for new messages and interactions."] },
+        { name: 'David Lee', skills: ['AWS', 'Docker', 'CI/CD'], reasoning: 'DevOps expert to ensure smooth deployment and scaling.', featureSuggestions: ["Set up a CI/CD pipeline for automated testing and deployment.", "Configure scalable cloud infrastructure on AWS."] },
+        { name: 'Eve Davis', skills: ['UI/UX Design', 'Figma', 'CSS'], reasoning: 'Specializes in creating intuitive and beautiful user interfaces.', featureSuggestions: ["Create a complete design system and component library in Figma.", "Ensure the application is fully accessible (WCAG AA)."] },
       ],
     };
 
@@ -232,20 +225,35 @@ export function ProjectGenesisClient() {
               <CardTitle className="font-headline flex items-center gap-2"><Lightbulb className="w-6 h-6"/>Feature Suggestions</CardTitle>
             </CardHeader>
             <CardContent>
-              {analysisResult.featureSuggestions.length > 0 ? (
-                <ul className="space-y-3">
-                    {analysisResult.featureSuggestions.map((feature, i) => (
-                        <li key={i} className="flex items-start gap-3 p-3 bg-secondary/50 rounded-lg">
-                            <Lightbulb className="w-5 h-5 mt-1 text-primary shrink-0"/>
-                            <span className="text-sm">{feature}</span>
-                        </li>
-                    ))}
-                </ul>
-              ) : (
-                <div className="text-center text-muted-foreground py-8">
-                  <p>No feature suggestions available.</p>
-                </div>
-              )}
+              <Accordion type="single" collapsible className="w-full">
+                {analysisResult.team.map((developer, index) => (
+                  <AccordionItem value={`item-${index}`} key={developer.name}>
+                    <AccordionTrigger>
+                      <div className="flex items-center gap-2">
+                        <Avatar className="w-6 h-6">
+                            <AvatarImage src={`https://placehold.co/100x100.png`} alt={developer.name} data-ai-hint="person avatar small"/>
+                            <AvatarFallback>{developer.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium">{developer.name}</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      {developer.featureSuggestions.length > 0 ? (
+                        <ul className="space-y-3 pl-6">
+                            {developer.featureSuggestions.map((feature, i) => (
+                                <li key={i} className="flex items-start gap-3 p-3 bg-secondary/50 rounded-lg">
+                                    <Lightbulb className="w-5 h-5 mt-1 text-primary shrink-0"/>
+                                    <span className="text-sm">{feature}</span>
+                                </li>
+                            ))}
+                        </ul>
+                      ) : (
+                        <p className="text-muted-foreground text-sm pl-6">No feature suggestions for this developer.</p>
+                      )}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             </CardContent>
           </Card>
         </div>
