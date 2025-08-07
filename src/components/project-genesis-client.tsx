@@ -59,11 +59,25 @@ import {
   User,
   Check,
   TrendingUp,
+  Ticket,
+  Circle,
+  CheckCircle2,
+  XCircle,
+  Clock,
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { ScrollArea, ScrollBar } from "./ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
+import { Badge } from "./ui/badge";
+
+type JiraTaskStatus = 'To Do' | 'In Progress' | 'Done' | 'Blocked';
+
+type JiraTask = {
+    ticket: string;
+    description: string;
+    status: JiraTaskStatus;
+};
 
 type ProjectAnalysis = {
   analysis: {
@@ -83,7 +97,7 @@ type ProjectAnalysis = {
     name: string;
     skills: string[];
     reasoning: string;
-    featureSuggestions: string[];
+    jiraTasks: JiraTask[];
   }[];
   dailyUpdates: {
     developerName: string;
@@ -94,6 +108,21 @@ type ProjectAnalysis = {
 
 type View = 'upload' | 'setup' | 'dashboard';
 type SetupStep = 'repository' | 'breakdown';
+
+const statusIcons: Record<JiraTaskStatus, React.ElementType> = {
+    'To Do': Circle,
+    'In Progress': Clock,
+    'Done': CheckCircle2,
+    'Blocked': XCircle,
+};
+
+const statusColors: Record<JiraTaskStatus, string> = {
+    'To Do': 'bg-gray-400',
+    'In Progress': 'bg-blue-500',
+    'Done': 'bg-green-500',
+    'Blocked': 'bg-red-500',
+};
+
 
 export function ProjectGenesisClient() {
   const [isLoading, setIsLoading] = useState(false);
@@ -155,11 +184,22 @@ export function ProjectGenesisClient() {
         { part: 'Deployment & Infrastructure', description: 'Managing cloud infrastructure and CI/CD pipelines.', suggestedDeveloper: 'David Lee' },
       ],
       team: [
-        { name: 'Alice Johnson', skills: ['React', 'Next.js', 'TypeScript'], reasoning: 'Experienced in frontend development with a strong focus on building scalable React applications.', featureSuggestions: ["Implement user authentication and profile pages.", "Develop a responsive and dynamic social feed."] },
-        { name: 'Bob Williams', skills: ['Node.js', 'GraphQL', 'PostgreSQL'], reasoning: 'Skilled in backend services and database management, perfect for the API and data layers.', featureSuggestions: ["Design and build the database schema for users and posts.", "Create a GraphQL API for real-time chat functionality."] },
-        { name: 'Charlie Brown', skills: ['React Native', 'Firebase', 'Mobile UI/UX'], reasoning: 'Has a background in mobile development, which will be crucial for the native app version.', featureSuggestions: ["Develop a native mobile app for iOS and Android.", "Integrate push notifications for new messages and interactions."] },
-        { name: 'David Lee', skills: ['AWS', 'Docker', 'CI/CD'], reasoning: 'DevOps expert to ensure smooth deployment and scaling.', featureSuggestions: ["Set up a CI/CD pipeline for automated testing and deployment.", "Configure scalable cloud infrastructure on AWS."] },
-        { name: 'Eve Davis', skills: ['UI/UX Design', 'Figma', 'CSS'], reasoning: 'Specializes in creating intuitive and beautiful user interfaces.', featureSuggestions: ["Create a complete design system and component library in Figma.", "Ensure the application is fully accessible (WCAG AA)."] },
+        { name: 'Alice Johnson', skills: ['React', 'Next.js', 'TypeScript'], reasoning: 'Experienced in frontend development with a strong focus on building scalable React applications.', jiraTasks: [
+            { ticket: 'GEN-101', description: 'Implement user authentication and profile pages.', status: 'Done' },
+            { ticket: 'GEN-102', description: 'Develop a responsive and dynamic social feed.', status: 'In Progress' },
+        ] },
+        { name: 'Bob Williams', skills: ['Node.js', 'GraphQL', 'PostgreSQL'], reasoning: 'Skilled in backend services and database management, perfect for the API and data layers.', jiraTasks: [
+            { ticket: 'GEN-201', description: 'Design and build the database schema for users and posts.', status: 'Done' },
+            { ticket: 'GEN-202', description: 'Create a GraphQL API for real-time chat functionality.', status: 'To Do' },
+        ] },
+        { name: 'Charlie Brown', skills: ['React Native', 'Firebase', 'Mobile UI/UX'], reasoning: 'Has a background in mobile development, which will be crucial for the native app version.', jiraTasks: [
+            { ticket: 'GEN-301', description: 'Develop a native mobile app for iOS and Android.', status: 'Blocked' },
+            { ticket: 'GEN-302', description: 'Integrate push notifications for new messages and interactions.', status: 'To Do' },
+        ] },
+        { name: 'David Lee', skills: ['AWS', 'Docker', 'CI/CD'], reasoning: 'DevOps expert to ensure smooth deployment and scaling.', jiraTasks: [
+            { ticket: 'GEN-401', description: 'Set up a CI/CD pipeline for automated testing and deployment.', status: 'In Progress' },
+        ] },
+        { name: 'Eve Davis', skills: ['UI/UX Design', 'Figma', 'CSS'], reasoning: 'Specializes in creating intuitive and beautiful user interfaces.', jiraTasks: [] },
       ],
       dailyUpdates: [
         { developerName: 'Alice Johnson', update: 'Completed the basic layout for the user profile page.', date: '2024-07-31' },
@@ -172,7 +212,6 @@ export function ProjectGenesisClient() {
     setAnalysisResult(result);
     setRepoName(result.repository.name);
 
-    // Initialize assigned developers with suggestions
     const initialAssignments: Record<string, string[]> = {};
     result.projectBreakdown.forEach(part => {
         initialAssignments[part.part] = [part.suggestedDeveloper];
@@ -532,7 +571,8 @@ export function ProjectGenesisClient() {
 
             <Card className="lg:col-span-2">
                 <CardHeader>
-                <CardTitle className="font-headline flex items-center gap-2"><Lightbulb className="w-6 h-6"/>Feature Suggestions</CardTitle>
+                    <CardTitle className="font-headline flex items-center gap-2"><Ticket className="w-6 h-6"/>Jira Board</CardTitle>
+                    <CardDescription>Tasks assigned to developers for this project.</CardDescription>
                 </CardHeader>
                 <CardContent>
                 <Accordion type="single" collapsible className="w-full">
@@ -548,17 +588,24 @@ export function ProjectGenesisClient() {
                         </div>
                         </AccordionTrigger>
                         <AccordionContent>
-                        {developer.featureSuggestions.length > 0 ? (
-                            <ul className="space-y-3 pl-6">
-                                {developer.featureSuggestions.map((feature, i) => (
-                                    <li key={i} className="flex items-start gap-3 p-3 bg-secondary/50 rounded-lg">
-                                        <Lightbulb className="w-5 h-5 mt-1 text-primary shrink-0"/>
-                                        <span className="text-sm">{feature}</span>
-                                    </li>
-                                ))}
-                            </ul>
+                        {developer.jiraTasks.length > 0 ? (
+                            <div className="space-y-3 pl-6">
+                                {developer.jiraTasks.map((task, i) => {
+                                    const StatusIcon = statusIcons[task.status];
+                                    const iconColor = statusColors[task.status];
+                                    return (
+                                        <div key={i} className="flex items-start gap-3 p-3 bg-secondary/50 rounded-lg">
+                                            <StatusIcon className={`w-5 h-5 mt-1 text-white rounded-full p-0.5 ${iconColor} shrink-0`}/>
+                                            <div>
+                                                <p className="font-medium text-sm">{task.ticket}: <span className="font-normal">{task.description}</span></p>
+                                                <Badge variant="outline" className="mt-1">{task.status}</Badge>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
                         ) : (
-                            <p className="text-muted-foreground text-sm pl-6">No feature suggestions for this developer.</p>
+                            <p className="text-muted-foreground text-sm pl-6">No tasks assigned to this developer.</p>
                         )}
                         </AccordionContent>
                     </AccordionItem>
