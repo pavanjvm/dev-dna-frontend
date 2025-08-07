@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 import {
   UploadCloud,
@@ -72,6 +73,7 @@ type DailyUpdate = {
 
 type Step = "UPLOAD" | "SETUP" | "TEAM" | "JIRA" | "DASHBOARD";
 type Developer = RecommendDevelopersOutput[0];
+type RepoOption = "new" | "existing";
 
 const stepConfig: Record<Step, { value: number; label: string }> = {
   UPLOAD: { value: 0, label: "Upload" },
@@ -89,6 +91,8 @@ export function ProjectGenesisClient() {
   const [analysis, setAnalysis] =
     useState<AnalyzeProjectRequirementsOutput | null>(null);
   const [repoName, setRepoName] = useState("project-genesis-app");
+  const [repoOption, setRepoOption] = useState<RepoOption>("new");
+  const [repoUrl, setRepoUrl] = useState("");
   const [recommendedDevs, setRecommendedDevs] =
     useState<RecommendDevelopersOutput | null>(null);
   const [selectedDevs, setSelectedDevs] = useState<Developer[]>([]);
@@ -154,7 +158,7 @@ export function ProjectGenesisClient() {
   };
 
   const handleCreateJira = async () => {
-    if (!analysis || !repoName || selectedDevs.length === 0) return;
+    if (!analysis || selectedDevs.length === 0) return;
     setIsLoading(true);
     setLoadingMessage("Creating Jira board and assigning tasks...");
     await new Promise(resolve => setTimeout(resolve, 1500));
@@ -220,6 +224,12 @@ export function ProjectGenesisClient() {
     </Card>
   );
 
+  const isRepoSetupValid = () => {
+    if (repoOption === "new") return !!repoName;
+    if (repoOption === "existing") return !!repoUrl;
+    return false;
+  };
+  
   const renderSetupStep = () =>
     analysis && (
       <div className="w-full max-w-4xl grid gap-8">
@@ -254,24 +264,68 @@ export function ProjectGenesisClient() {
         <Card>
           <CardHeader className="flex-row items-center gap-4">
             <Github className="w-8 h-8 text-primary" />
-            <CardTitle className="font-headline">Create Repository</CardTitle>
+            <CardTitle className="font-headline">Repository Setup</CardTitle>
           </CardHeader>
-          <CardContent>
-            <Label htmlFor="repo-name">Repository Name</Label>
-            <Input
-              id="repo-name"
-              placeholder="e.g., project-genesis-app"
-              value={repoName}
-              onChange={(e) => setRepoName(e.target.value)}
-            />
+          <CardContent className="space-y-4">
+            <RadioGroup
+              defaultValue="new"
+              onValueChange={(value: string) =>
+                setRepoOption(value as RepoOption)
+              }
+              className="grid grid-cols-2 gap-4"
+            >
+              <div>
+                <RadioGroupItem value="new" id="r1" className="peer sr-only" />
+                <Label
+                  htmlFor="r1"
+                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                >
+                  Create New Repository
+                </Label>
+              </div>
+              <div>
+                <RadioGroupItem
+                  value="existing"
+                  id="r2"
+                  className="peer sr-only"
+                />
+                <Label
+                  htmlFor="r2"
+                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                >
+                  Use Existing Repository
+                </Label>
+              </div>
+            </RadioGroup>
+            {repoOption === "new" ? (
+              <div className="space-y-2">
+                <Label htmlFor="repo-name">Repository Name</Label>
+                <Input
+                  id="repo-name"
+                  placeholder="e.g., project-genesis-app"
+                  value={repoName}
+                  onChange={(e) => setRepoName(e.target.value)}
+                />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="repo-url">Repository URL</Label>
+                <Input
+                  id="repo-url"
+                  placeholder="e.g., https://github.com/user/repo"
+                  value={repoUrl}
+                  onChange={(e) => setRepoUrl(e.target.value)}
+                />
+              </div>
+            )}
           </CardContent>
           <CardFooter>
             <Button
               onClick={handleRecommendDevelopers}
-              disabled={!repoName}
+              disabled={!isRepoSetupValid()}
               size="lg"
             >
-              Create & Find Team
+              Set Up & Find Team
             </Button>
           </CardFooter>
         </Card>
@@ -383,6 +437,31 @@ export function ProjectGenesisClient() {
     return { task, assignee };
   };
 
+  const getRepoUrl = () => {
+    if (repoOption === 'new') {
+        return `https://github.com/new/${repoName}`;
+    }
+    return repoUrl;
+  }
+
+  const getRepoName = () => {
+    if (repoOption === 'new') {
+      return repoName;
+    }
+    // Attempt to parse name from URL
+    try {
+      const url = new URL(repoUrl);
+      const pathParts = url.pathname.split('/').filter(p => p);
+      if (pathParts.length >= 2) {
+        return pathParts.slice(-2).join('/');
+      }
+    } catch (e) {
+      // It might not be a valid URL, return the raw string
+      return repoUrl;
+    }
+    return repoUrl;
+  }
+
   const renderDashboardStep = () =>
     analysis &&
     jiraTasks && (
@@ -392,11 +471,11 @@ export function ProjectGenesisClient() {
             <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
               <LayoutDashboard className="w-10 h-10 text-primary hidden md:block" />
               <div className="flex-grow">
-                <CardTitle className="font-headline text-4xl">{repoName}</CardTitle>
+                <CardTitle className="font-headline text-4xl">{getRepoName()}</CardTitle>
                 <CardDescription className="text-base mt-1">{analysis.summary}</CardDescription>
-                <a href={`https://github.com/new/${repoName}`} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1 mt-2">
+                <a href={getRepoUrl()} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1 mt-2">
                     <Github className="w-4 h-4" />
-                    https://github.com/new/{repoName}
+                    {getRepoUrl()}
                 </a>
               </div>
             </div>
