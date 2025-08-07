@@ -44,6 +44,8 @@ import {
   Rocket,
   LayoutDashboard,
   CheckCircle,
+  Newspaper,
+  Calendar,
 } from "lucide-react";
 
 // Mock types that were previously imported from AI flows
@@ -60,6 +62,12 @@ type RecommendDevelopersOutput = {
 
 type CreateJiraTasksOutput = {
   jiraTaskDetails: string[];
+};
+
+type DailyUpdate = {
+  developer: string;
+  update: string;
+  date: string;
 };
 
 type Step = "UPLOAD" | "SETUP" | "TEAM" | "JIRA" | "DASHBOARD";
@@ -80,13 +88,14 @@ export function ProjectGenesisClient() {
   const [file, setFile] = useState<File | null>(null);
   const [analysis, setAnalysis] =
     useState<AnalyzeProjectRequirementsOutput | null>(null);
-  const [repoName, setRepoName] = useState("");
+  const [repoName, setRepoName] = useState("project-genesis-app");
   const [recommendedDevs, setRecommendedDevs] =
     useState<RecommendDevelopersOutput | null>(null);
   const [selectedDevs, setSelectedDevs] = useState<Developer[]>([]);
   const [jiraTasks, setJiraTasks] = useState<CreateJiraTasksOutput | null>(
     null
   );
+  const [dailyUpdates, setDailyUpdates] = useState<DailyUpdate[]>([]);
 
   const { toast } = useToast();
 
@@ -132,11 +141,14 @@ export function ProjectGenesisClient() {
     setIsLoading(true);
     setLoadingMessage("Recommending suitable developers...");
     await new Promise(resolve => setTimeout(resolve, 1500));
-    setRecommendedDevs([
+    const devs = [
       { name: 'Alice Johnson', skills: ['React', 'Next.js', 'TypeScript'], reasoning: 'Experienced in frontend development with a strong focus on building scalable React applications.' },
       { name: 'Bob Williams', skills: ['Node.js', 'GraphQL', 'PostgreSQL'], reasoning: 'Skilled in backend services and database management, perfect for the API and data layers.' },
       { name: 'Charlie Brown', skills: ['React Native', 'Firebase', 'Mobile UI/UX'], reasoning: 'Has a background in mobile development, which will be crucial for the native app version.' },
-    ]);
+    ];
+    setRecommendedDevs(devs);
+    // Auto-select all recommended devs for the mock
+    setSelectedDevs(devs);
     setStep("TEAM");
     setIsLoading(false);
   };
@@ -155,6 +167,11 @@ export function ProjectGenesisClient() {
         'PROJ-5: Develop real-time chat feature - Assigned to Charlie Brown',
       ]
     });
+    setDailyUpdates([
+      { developer: 'Alice Johnson', update: 'Completed the basic layout for the user profile page and started working on the authentication logic.', date: '2024-07-29' },
+      { developer: 'Bob Williams', update: 'Finalized the database schema for user profiles and posts. Began setting up the initial Express server.', date: '2024-07-29' },
+      { developer: 'Charlie Brown', update: 'Investigated options for the real-time chat feature. Decided on using Socket.IO and created a basic prototype.', date: '2024-07-29' },
+    ]);
     setStep("DASHBOARD");
     setIsLoading(false);
   };
@@ -297,6 +314,7 @@ export function ProjectGenesisClient() {
                   </div>
                   <Checkbox
                     className="w-5 h-5"
+                    checked={selectedDevs.some(d => d.name === dev.name)}
                     onCheckedChange={(checked) =>
                       toggleDeveloperSelection(dev, !!checked)
                     }
@@ -341,39 +359,18 @@ export function ProjectGenesisClient() {
       </div>
       <div className="flex justify-center">
         <Button
-          onClick={() => setStep("JIRA")}
+          onClick={handleCreateJira}
           disabled={selectedDevs.length === 0}
           size="lg"
         >
-          Finalize Team ({selectedDevs.length} selected)
+          Finalize Team & Generate Tasks
         </Button>
       </div>
     </div>
   );
-
-  const renderJiraStep = () => (
-    <Card className="w-full max-w-md text-center">
-      <CardHeader>
-        <Rocket className="w-12 h-12 text-primary mx-auto mb-4" />
-        <CardTitle className="font-headline text-3xl">Ready to Launch?</CardTitle>
-        <CardDescription>
-          Project '{repoName}' is ready with a team of {selectedDevs.length}{" "}
-          members.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <p>
-          The next step will automatically create a Jira board and generate
-          initial tasks based on the project analysis.
-        </p>
-      </CardContent>
-      <CardFooter className="justify-center">
-        <Button onClick={handleCreateJira} size="lg">
-          Generate Jira Tasks
-        </Button>
-      </CardFooter>
-    </Card>
-  );
+  
+  // This step is now skipped and logic is combined with team step.
+  const renderJiraStep = () => null;
 
   const parseJiraTask = (taskString: string) => {
     let task = taskString;
@@ -389,23 +386,27 @@ export function ProjectGenesisClient() {
   const renderDashboardStep = () =>
     analysis &&
     jiraTasks && (
-      <div className="w-full max-w-6xl grid gap-8">
+      <div className="w-full max-w-7xl grid gap-8">
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-4">
-              <LayoutDashboard className="w-8 h-8 text-primary" />
-              <div>
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+              <LayoutDashboard className="w-10 h-10 text-primary hidden md:block" />
+              <div className="flex-grow">
                 <CardTitle className="font-headline text-4xl">{repoName}</CardTitle>
-                <CardDescription>{analysis.summary}</CardDescription>
+                <CardDescription className="text-base mt-1">{analysis.summary}</CardDescription>
+                <a href={`https://github.com/new/${repoName}`} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1 mt-2">
+                    <Github className="w-4 h-4" />
+                    https://github.com/new/{repoName}
+                </a>
               </div>
             </div>
           </CardHeader>
         </Card>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          <Card className="md:col-span-1">
+        <div className="grid lg:grid-cols-3 gap-6">
+          <Card className="lg:col-span-1">
             <CardHeader>
-              <CardTitle className="font-headline">Project Team</CardTitle>
+              <CardTitle className="font-headline flex items-center gap-2"><Users className="w-6 h-6" />Project Team</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4">
               {selectedDevs.map((dev) => (
@@ -423,14 +424,19 @@ export function ProjectGenesisClient() {
                         .join("")}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="font-medium">{dev.name}</span>
+                  <div>
+                    <span className="font-medium">{dev.name}</span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {dev.skills.map(skill => <Badge key={skill} variant="secondary">{skill}</Badge>)}
+                    </div>
+                  </div>
                 </div>
               ))}
             </CardContent>
           </Card>
-          <Card className="md:col-span-2">
+          <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle className="font-headline">Task Assignments</CardTitle>
+              <CardTitle className="font-headline flex items-center gap-2"><FileText className="w-6 h-6"/>Task Assignments</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
@@ -445,7 +451,7 @@ export function ProjectGenesisClient() {
                     const { task, assignee } = parseJiraTask(taskString);
                     return (
                       <TableRow key={i}>
-                        <TableCell>{task}</TableCell>
+                        <TableCell className="font-medium">{task}</TableCell>
                         <TableCell>
                           {assignee || (
                             <span className="text-muted-foreground">
@@ -461,6 +467,31 @@ export function ProjectGenesisClient() {
             </CardContent>
           </Card>
         </div>
+         <Card>
+            <CardHeader>
+              <CardTitle className="font-headline flex items-center gap-2"><Newspaper className="w-6 h-6"/>Daily Updates</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {dailyUpdates.map((update, i) => (
+                <div key={i} className="flex gap-4">
+                    <Avatar>
+                        <AvatarImage src={`https://placehold.co/100x100.png`} alt={update.developer} data-ai-hint="person icon"/>
+                        <AvatarFallback>{update.developer.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-grow">
+                        <div className="flex items-center justify-between">
+                            <p className="font-semibold">{update.developer}</p>
+                            <div className="text-xs text-muted-foreground flex items-center gap-1">
+                                <Calendar className="w-3 h-3"/>
+                                {update.date}
+                            </div>
+                        </div>
+                        <p className="text-muted-foreground mt-1">{update.update}</p>
+                    </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
       </div>
     );
 
@@ -473,13 +504,46 @@ export function ProjectGenesisClient() {
       case "TEAM":
         return renderTeamStep();
       case "JIRA":
-        return renderJiraStep();
+        // This step is now logically skipped.
+        return null; 
       case "DASHBOARD":
         return renderDashboardStep();
       default:
         return null;
     }
   };
+  
+  const MainContent = () => {
+    if (step === 'DASHBOARD') {
+      return renderDashboardStep();
+    }
+    
+    return (
+       <>
+        <div className="w-full max-w-2xl mx-auto mb-12">
+            <Progress value={stepConfig[step].value} className="w-full" />
+            <div className="flex justify-between mt-2 text-sm text-muted-foreground">
+            {Object.entries(stepConfig)
+                .filter(([key, s]) => s.value <= stepConfig[step].value)
+                .map(([key, s]) => (
+                <span key={s.label}>{s.label}</span>
+                ))}
+            </div>
+        </div>
+
+        <div className="flex items-center justify-center">
+            {isLoading ? (
+            <div className="flex flex-col items-center gap-4">
+                <Loader2 className="w-16 h-16 animate-spin text-primary" />
+                <p className="text-muted-foreground text-lg">{loadingMessage}</p>
+            </div>
+            ) : (
+            renderContent()
+            )}
+        </div>
+       </>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4 md:p-8">
@@ -488,32 +552,14 @@ export function ProjectGenesisClient() {
           Project Genesis
         </h1>
         <p className="text-muted-foreground text-lg">
-          Intelligently kickstart your software projects.
+          {step === 'DASHBOARD' 
+            ? 'Your project dashboard is live.' 
+            : 'Intelligently kickstart your software projects.'
+          }
         </p>
       </div>
-
-      <div className="w-full max-w-2xl mx-auto mb-12">
-        <Progress value={stepConfig[step].value} className="w-full" />
-        <div className="flex justify-between mt-2 text-sm text-muted-foreground">
-          {Object.values(stepConfig).map(
-            (s) =>
-              s.value <= stepConfig[step].value && (
-                <span key={s.label}>{s.label}</span>
-              )
-          )}
-        </div>
-      </div>
-
-      <div className="flex items-center justify-center">
-        {isLoading ? (
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="w-16 h-16 animate-spin text-primary" />
-            <p className="text-muted-foreground text-lg">{loadingMessage}</p>
-          </div>
-        ) : (
-          renderContent()
-        )}
-      </div>
+      
+      <MainContent/>
     </div>
   );
 }
