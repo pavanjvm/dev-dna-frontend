@@ -255,7 +255,7 @@ export function ProjectGenesisClient() {
               <UploadView 
                 file={file}
                 isLoading={isLoading}
-                handleFileChange={handleFilechange}
+                handleFileChange={handleFileChange}
                 handleAnalyze={handleAnalyze}
               />
             );
