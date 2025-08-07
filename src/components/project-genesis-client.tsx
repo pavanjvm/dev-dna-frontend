@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, ChangeEvent } from "react";
+import { useState, ChangeEvent, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { UploadView } from "@/components/views/upload-view";
 import { SetupView } from "@/components/views/setup-view";
@@ -49,17 +50,50 @@ export type SetupStep = 'repository' | 'breakdown';
 
 
 export function ProjectGenesisClient() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [isLoading, setIsLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [analysisResult, setAnalysisResult] = useState<ProjectAnalysis | null>(null);
-  const [currentView, setCurrentView] = useState<View>('upload');
-  const [setupStep, setSetupStep] = useState<SetupStep>('repository');
+
+  const currentView = (searchParams.get('view') as View) || 'upload';
+  const setupStep = (searchParams.get('step') as SetupStep) || 'repository';
+
   const [repoOption, setRepoOption] = useState('create');
   const [repoUrl, setRepoUrl] = useState('');
   const [repoName, setRepoName] = useState('project-genesis-app');
   const [assignedDevelopers, setAssignedDevelopers] = useState<Record<string, string[]>>({});
 
   const { toast } = useToast();
+
+  const setCurrentView = (view: View) => {
+    router.push(`/?view=${view}`);
+  };
+
+  const setSetupStep = (step: SetupStep) => {
+    router.push(`/?view=setup&step=${step}`);
+  };
+
+  useEffect(() => {
+    // Attempt to load analysis from session storage on initial load
+    const storedAnalysis = sessionStorage.getItem('projectAnalysis');
+    if (storedAnalysis) {
+        try {
+            const parsedAnalysis: ProjectAnalysis = JSON.parse(storedAnalysis);
+            setAnalysisResult(parsedAnalysis);
+            setRepoName(parsedAnalysis.repository.name);
+            const initialAssignments: Record<string, string[]> = {};
+            parsedAnalysis.projectBreakdown.forEach(part => {
+                initialAssignments[part.part] = [part.suggestedDeveloper];
+            });
+            setAssignedDevelopers(initialAssignments);
+        } catch (error) {
+            console.error("Failed to parse analysis from session storage", error);
+            sessionStorage.removeItem('projectAnalysis');
+        }
+    }
+  }, []);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -155,7 +189,12 @@ export function ProjectGenesisClient() {
         { developerName: 'Alice Johnson', update: 'Implemented the authentication logic with Firebase.', date: '2024-07-30' },
       ],
     };
-
+    
+    try {
+        sessionStorage.setItem('projectAnalysis', JSON.stringify(result));
+    } catch (error) {
+        console.error("Failed to save analysis to session storage", error);
+    }
     setAnalysisResult(result);
     setRepoName(result.repository.name);
 
@@ -216,7 +255,7 @@ export function ProjectGenesisClient() {
               <UploadView 
                 file={file}
                 isLoading={isLoading}
-                handleFileChange={handleFileChange}
+                handleFileChange={handleFilechange}
                 handleAnalyze={handleAnalyze}
               />
             );
