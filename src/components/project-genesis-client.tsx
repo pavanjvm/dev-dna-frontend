@@ -2,16 +2,6 @@
 
 import { useState, ChangeEvent } from "react";
 import { useToast } from "@/hooks/use-toast";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -26,14 +16,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
@@ -42,28 +24,23 @@ import {
 import {
   UploadCloud,
   Loader2,
-  FileText,
   Github,
   Users,
   LayoutDashboard,
-  Calendar,
-  Activity,
   Newspaper,
-  Lightbulb,
   Puzzle,
   ArrowLeft,
   UserPlus,
   Search,
   PlusCircle,
   ChevronRight,
-  User,
   Check,
-  TrendingUp,
   Ticket,
   Circle,
   CheckCircle2,
   XCircle,
   Clock,
+  Star,
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { ScrollArea, ScrollBar } from "./ui/scroll-area";
@@ -506,7 +483,7 @@ export function ProjectGenesisClient() {
         const assignedCount = Object.values(assignedDevelopers).flat().filter(d => d === dev.name).length;
         const updateCount = analysisResult.dailyUpdates.filter(u => u.developerName === dev.name).length;
         return {
-            name: dev.name.split(' ')[0],
+            name: dev.name,
             score: (assignedCount * 5) + (updateCount * 2) 
         };
     }).sort((a, b) => b.score - a.score);
@@ -671,24 +648,6 @@ export function ProjectGenesisClient() {
         <div className="grid lg:grid-cols-3 gap-6">
             <Card className="lg:col-span-2">
                 <CardHeader>
-                    <CardTitle className="font-headline flex items-center gap-2"><TrendingUp className="w-6 h-6" />Performance Metrics</CardTitle>
-                    <CardDescription>Contribution scores based on assignments and updates.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={performanceData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <RechartsTooltip cursor={{ fill: 'hsla(var(--accent) / 0.2)' }}/>
-                            <Legend />
-                            <Bar dataKey="score" fill="hsl(var(--primary))" name="Contribution Score" />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </CardContent>
-            </Card>
-            <Card className="lg:col-span-1">
-                <CardHeader>
                     <CardTitle className="font-headline flex items-center gap-2"><Newspaper className="w-6 h-6" />Daily Updates</CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -709,6 +668,34 @@ export function ProjectGenesisClient() {
                             ))}
                         </div>
                     </ScrollArea>
+                </CardContent>
+            </Card>
+            <Card className="lg:col-span-1">
+                <CardHeader>
+                    <CardTitle className="font-headline flex items-center gap-2"><Star className="w-6 h-6" />Leaderboard</CardTitle>
+                    <CardDescription>Top contributors based on project activity.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ul className="space-y-4">
+                        {performanceData.slice(0, 5).map((dev, index) => (
+                            <li key={dev.name} className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <Avatar className="w-9 h-9">
+                                        <AvatarImage src={`https://placehold.co/100x100.png`} alt={dev.name} data-ai-hint="person avatar small"/>
+                                        <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                        <p className="font-medium text-sm">{dev.name}</p>
+                                        <p className="text-xs text-muted-foreground">{analysisResult.team.find(d => d.name === dev.name)?.skills.slice(0, 2).join(', ')}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-1 text-yellow-400">
+                                    <span className="font-bold text-sm">{Math.floor(dev.score / 5)}</span>
+                                    <Star className="w-4 h-4 fill-current" />
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
                 </CardContent>
             </Card>
         </div>
@@ -893,5 +880,3 @@ export function ProjectGenesisClient() {
     </div>
   );
 }
-
-    
