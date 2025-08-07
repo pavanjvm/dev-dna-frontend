@@ -45,10 +45,13 @@ import {
   Newspaper,
   Lightbulb,
   Puzzle,
+  ArrowLeft,
+  UserPlus,
+  Search,
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
+import { ScrollArea, ScrollBar } from "./ui/scroll-area";
 
-// Updated project analysis type
 type ProjectAnalysis = {
   analysis: {
     summary: string;
@@ -71,12 +74,14 @@ type ProjectAnalysis = {
   }[];
 };
 
-type Developer = ProjectAnalysis["team"][0];
+type View = 'upload' | 'dashboard' | 'breakdown';
 
 export function ProjectGenesisClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [analysisResult, setAnalysisResult] = useState<ProjectAnalysis | null>(null);
+  const [currentView, setCurrentView] = useState<View>('upload');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { toast } = useToast();
 
@@ -108,10 +113,8 @@ export function ProjectGenesisClient() {
 
     setIsLoading(true);
 
-    // Mock AI call
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    // Mock response based on the updated JSON structure
     const result: ProjectAnalysis = {
       analysis: {
         summary: "The project is a new social media platform for pet owners, allowing them to share photos, connect with others, and find pet-friendly locations.",
@@ -138,6 +141,7 @@ export function ProjectGenesisClient() {
 
     setAnalysisResult(result);
     setIsLoading(false);
+    setCurrentView('dashboard');
   };
 
   const renderUploadStep = () => (
@@ -179,7 +183,7 @@ export function ProjectGenesisClient() {
 
   const renderDashboardStep = () =>
     analysisResult && (
-      <div className="w-full max-w-7xl grid gap-8">
+      <div className="w-full max-w-7xl grid gap-8 animate-in fade-in-50">
         <Card>
           <CardHeader>
             <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
@@ -197,34 +201,37 @@ export function ProjectGenesisClient() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="font-headline flex items-center gap-2">
-              <Puzzle className="w-6 h-6" />
-              Project Breakdown
-            </CardTitle>
-            <CardDescription>
-              The project has been broken down into the following parts, with developers suggested based on their skills.
-            </CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+                <CardTitle className="font-headline flex items-center gap-2">
+                <Puzzle className="w-6 h-6" />
+                Project Breakdown
+                </CardTitle>
+                <CardDescription>
+                The project has been broken down into parts with suggested developers.
+                </CardDescription>
+            </div>
+            <Button onClick={() => setCurrentView('breakdown')}>View & Assign</Button>
           </CardHeader>
           <CardContent>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {analysisResult.projectBreakdown.map((part) => (
-                <Card key={part.part} className="bg-secondary/50">
-                  <CardHeader>
-                    <CardTitle className="text-lg">{part.part}</CardTitle>
-                    <CardDescription>{part.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Avatar className="w-6 h-6">
-                            <AvatarImage src={`https://placehold.co/100x100.png`} alt={part.suggestedDeveloper} data-ai-hint="person avatar small"/>
-                            <AvatarFallback>{part.suggestedDeveloper.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium text-muted-foreground">Suggested: <span className="text-foreground">{part.suggestedDeveloper}</span></span>
-                      </div>
-                  </CardContent>
-                </Card>
-              ))}
+             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {analysisResult.projectBreakdown.slice(0,4).map((part) => (
+                    <Card key={part.part} className="bg-secondary/50">
+                    <CardHeader>
+                        <CardTitle className="text-lg truncate">{part.part}</CardTitle>
+                        <CardDescription className="truncate">{part.description}</CardDescription>
+                    </CardHeader>
+                    <CardFooter>
+                        <div className="flex items-center gap-2 text-sm">
+                            <Avatar className="w-6 h-6">
+                                <AvatarImage src={`https://placehold.co/100x100.png`} alt={part.suggestedDeveloper} data-ai-hint="person avatar small"/>
+                                <AvatarFallback>{part.suggestedDeveloper.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                            </Avatar>
+                            <span className="font-medium text-muted-foreground">Suggested: <span className="text-foreground">{part.suggestedDeveloper}</span></span>
+                        </div>
+                    </CardFooter>
+                    </Card>
+                ))}
             </div>
           </CardContent>
         </Card>
@@ -304,6 +311,84 @@ export function ProjectGenesisClient() {
         </div>
       </div>
     );
+    
+  const renderBreakdownStep = () => {
+    if (!analysisResult) return null;
+    const filteredDevelopers = analysisResult.team.filter(dev => 
+        dev.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    return (
+        <div className="w-full animate-in fade-in-50">
+            <div className="flex items-center gap-4 mb-8">
+                <Button variant="outline" size="icon" onClick={() => setCurrentView('dashboard')}>
+                    <ArrowLeft className="w-4 h-4" />
+                </Button>
+                <div>
+                    <h2 className="font-headline text-3xl">Project Breakdown & Assignments</h2>
+                    <p className="text-muted-foreground">Assign developers to each part of the project.</p>
+                </div>
+            </div>
+            
+            <ScrollArea className="w-full pb-4">
+                <div className="flex gap-6">
+                    {analysisResult.projectBreakdown.map((part) => (
+                        <Card key={part.part} className="w-[350px] shrink-0">
+                            <CardHeader>
+                                <CardTitle>{part.part}</CardTitle>
+                                <CardDescription>{part.description}</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div>
+                                    <h4 className="text-sm font-semibold mb-2">Suggested Developer</h4>
+                                    <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
+                                        <div className="flex items-center gap-2">
+                                            <Avatar className="w-8 h-8">
+                                                <AvatarImage src={`https://placehold.co/100x100.png`} alt={part.suggestedDeveloper} data-ai-hint="person avatar"/>
+                                                <AvatarFallback>{part.suggestedDeveloper.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                            </Avatar>
+                                            <span className="font-medium">{part.suggestedDeveloper}</span>
+                                        </div>
+                                        <Button size="sm">Assign</Button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-semibold mb-2">Or add another developer</h4>
+                                    <div className="relative">
+                                        <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
+                                        <Input 
+                                            placeholder="Search developers..." 
+                                            className="pl-8" 
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                        />
+                                    </div>
+                                    <ScrollArea className="h-40 mt-2">
+                                        <div className="space-y-1 pr-4">
+                                        {filteredDevelopers.map(dev => (
+                                            <div key={dev.name} className="flex items-center justify-between p-2 rounded-md hover:bg-secondary">
+                                                <div className="flex items-center gap-2">
+                                                    <Avatar className="w-6 h-6">
+                                                        <AvatarImage src={`https://placehold.co/100x100.png`} alt={dev.name} data-ai-hint="person avatar small"/>
+                                                        <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                                    </Avatar>
+                                                    <span className="text-sm font-medium">{dev.name}</span>
+                                                </div>
+                                                 <Button variant="ghost" size="sm"><UserPlus className="mr-2 h-4 w-4"/>Add</Button>
+                                            </div>
+                                        ))}
+                                        </div>
+                                    </ScrollArea>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+                <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+        </div>
+    );
+  };
 
   const renderContent = () => {
     if (isLoading) {
@@ -316,11 +401,15 @@ export function ProjectGenesisClient() {
       );
     }
 
-    if (analysisResult) {
-      return renderDashboardStep();
+    switch (currentView) {
+        case 'dashboard':
+            return renderDashboardStep();
+        case 'breakdown':
+            return renderBreakdownStep();
+        case 'upload':
+        default:
+            return renderUploadStep();
     }
-
-    return renderUploadStep();
   };
   
   return (
