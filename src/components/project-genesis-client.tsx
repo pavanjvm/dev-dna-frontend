@@ -92,12 +92,13 @@ type ProjectAnalysis = {
     part: string;
     description: string;
     suggestedDeveloper: string;
+    suggestionReasoning: string;
+    tickets: JiraTask[];
   }[];
   team: {
     name: string;
     skills: string[];
     reasoning: string;
-    jiraTasks: JiraTask[];
   }[];
   dailyUpdates: {
     developerName: string;
@@ -178,28 +179,52 @@ export function ProjectGenesisClient() {
         url: "https://github.com/example/project-genesis-app"
       },
       projectBreakdown: [
-        { part: 'Frontend Development', description: 'Building the user interface and user experience.', suggestedDeveloper: 'Alice Johnson' },
-        { part: 'Backend API', description: 'Developing the server-side logic and data management.', suggestedDeveloper: 'Bob Williams' },
-        { part: 'Mobile App', description: 'Creating the native mobile application for iOS and Android.', suggestedDeveloper: 'Charlie Brown' },
-        { part: 'Deployment & Infrastructure', description: 'Managing cloud infrastructure and CI/CD pipelines.', suggestedDeveloper: 'David Lee' },
-      ],
-      team: [
-        { name: 'Alice Johnson', skills: ['React', 'Next.js', 'TypeScript'], reasoning: 'Experienced in frontend development with a strong focus on building scalable React applications.', jiraTasks: [
+        { 
+          part: 'Frontend Development', 
+          description: 'Building the user interface and user experience.', 
+          suggestedDeveloper: 'Alice Johnson',
+          suggestionReasoning: 'Alice has strong experience in React and Next.js, making her ideal for the frontend work.',
+          tickets: [
             { ticket: 'GEN-101', description: 'Implement user authentication and profile pages.', status: 'Done' },
             { ticket: 'GEN-102', description: 'Develop a responsive and dynamic social feed.', status: 'In Progress' },
-        ] },
-        { name: 'Bob Williams', skills: ['Node.js', 'GraphQL', 'PostgreSQL'], reasoning: 'Skilled in backend services and database management, perfect for the API and data layers.', jiraTasks: [
+          ],
+        },
+        { 
+          part: 'Backend API', 
+          description: 'Developing the server-side logic and data management.', 
+          suggestedDeveloper: 'Bob Williams',
+          suggestionReasoning: 'Bob\'s expertise in Node.js and databases is a perfect fit for building a robust API.',
+          tickets: [
             { ticket: 'GEN-201', description: 'Design and build the database schema for users and posts.', status: 'Done' },
             { ticket: 'GEN-202', description: 'Create a GraphQL API for real-time chat functionality.', status: 'To Do' },
-        ] },
-        { name: 'Charlie Brown', skills: ['React Native', 'Firebase', 'Mobile UI/UX'], reasoning: 'Has a background in mobile development, which will be crucial for the native app version.', jiraTasks: [
+          ]
+        },
+        { 
+          part: 'Mobile App', 
+          description: 'Creating the native mobile application for iOS and Android.', 
+          suggestedDeveloper: 'Charlie Brown',
+          suggestionReasoning: 'Charlie\'s background in mobile development is crucial for the native app version.',
+          tickets: [
             { ticket: 'GEN-301', description: 'Develop a native mobile app for iOS and Android.', status: 'Blocked' },
             { ticket: 'GEN-302', description: 'Integrate push notifications for new messages and interactions.', status: 'To Do' },
-        ] },
-        { name: 'David Lee', skills: ['AWS', 'Docker', 'CI/CD'], reasoning: 'DevOps expert to ensure smooth deployment and scaling.', jiraTasks: [
-            { ticket: 'GEN-401', description: 'Set up a CI/CD pipeline for automated testing and deployment.', status: 'In Progress' },
-        ] },
-        { name: 'Eve Davis', skills: ['UI/UX Design', 'Figma', 'CSS'], reasoning: 'Specializes in creating intuitive and beautiful user interfaces.', jiraTasks: [] },
+          ]
+        },
+        { 
+          part: 'Deployment & Infrastructure', 
+          description: 'Managing cloud infrastructure and CI/CD pipelines.', 
+          suggestedDeveloper: 'David Lee',
+          suggestionReasoning: 'David is a DevOps expert who can ensure smooth deployment and scaling.',
+          tickets: [
+             { ticket: 'GEN-401', description: 'Set up a CI/CD pipeline for automated testing and deployment.', status: 'In Progress' },
+          ]
+        },
+      ],
+      team: [
+        { name: 'Alice Johnson', skills: ['React', 'Next.js', 'TypeScript'], reasoning: 'Experienced in frontend development with a strong focus on building scalable React applications.' },
+        { name: 'Bob Williams', skills: ['Node.js', 'GraphQL', 'PostgreSQL'], reasoning: 'Skilled in backend services and database management, perfect for the API and data layers.' },
+        { name: 'Charlie Brown', skills: ['React Native', 'Firebase', 'Mobile UI/UX'], reasoning: 'Has a background in mobile development, which will be crucial for the native app version.' },
+        { name: 'David Lee', skills: ['AWS', 'Docker', 'CI/CD'], reasoning: 'DevOps expert to ensure smooth deployment and scaling.' },
+        { name: 'Eve Davis', skills: ['UI/UX Design', 'Figma', 'CSS'], reasoning: 'Specializes in creating intuitive and beautiful user interfaces.' },
       ],
       dailyUpdates: [
         { developerName: 'Alice Johnson', update: 'Completed the basic layout for the user profile page.', date: '2024-07-31' },
@@ -330,7 +355,7 @@ export function ProjectGenesisClient() {
             <Card className="w-full max-w-7xl animate-in fade-in-50">
                  <CardHeader>
                     <CardTitle>Project Breakdown & Assignments</CardTitle>
-                    <CardDescription>Assign developers to each part of the project.</CardDescription>
+                    <CardDescription>Assign developers to each part of the project. Developers can be assigned to multiple parts.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <TooltipProvider>
@@ -346,7 +371,22 @@ export function ProjectGenesisClient() {
                                         <div>
                                             <h4 className="text-sm font-semibold mb-2">Assigned Developers</h4>
                                             <div className="space-y-2 min-h-[6rem]">
-                                                {(assignedDevelopers[part.part] || []).map(devName => (
+                                                {part.suggestedDeveloper && (assignedDevelopers[part.part] || []).includes(part.suggestedDeveloper) && (
+                                                    <div className="flex items-center justify-between p-2 bg-background rounded-lg">
+                                                        <div className="flex items-center gap-2">
+                                                            <Avatar className="w-8 h-8">
+                                                                <AvatarImage src={`https://placehold.co/100x100.png`} alt={part.suggestedDeveloper} data-ai-hint="person avatar"/>
+                                                                <AvatarFallback>{part.suggestedDeveloper.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                                            </Avatar>
+                                                            <div>
+                                                                <span className="font-medium text-sm">{part.suggestedDeveloper} <Badge variant="secondary" className="ml-1">Auto-assigned</Badge></span>
+                                                                <p className="text-xs text-muted-foreground italic">"{part.suggestionReasoning}"</p>
+                                                            </div>
+                                                        </div>
+                                                        <Button size="sm" variant="ghost" onClick={() => handleRemoveDeveloper(part.part, part.suggestedDeveloper)}>Remove</Button>
+                                                    </div>
+                                                )}
+                                                {(assignedDevelopers[part.part] || []).filter(d => d !== part.suggestedDeveloper).map(devName => (
                                                     <div key={devName} className="flex items-center justify-between p-2 bg-background rounded-lg">
                                                         <div className="flex items-center gap-2">
                                                             <Avatar className="w-8 h-8">
@@ -358,21 +398,6 @@ export function ProjectGenesisClient() {
                                                         <Button size="sm" variant="ghost" onClick={() => handleRemoveDeveloper(part.part, devName)}>Remove</Button>
                                                     </div>
                                                 ))}
-                                                {part.suggestedDeveloper && !(assignedDevelopers[part.part] || []).includes(part.suggestedDeveloper) && (
-                                                    <div className="flex items-center justify-between p-2 border-2 border-dashed rounded-lg">
-                                                        <div className="flex items-center gap-2">
-                                                            <Avatar className="w-8 h-8 opacity-70">
-                                                                <AvatarImage src={`https://placehold.co/100x100.png`} alt={part.suggestedDeveloper} data-ai-hint="person avatar"/>
-                                                                <AvatarFallback>{part.suggestedDeveloper.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-                                                            </Avatar>
-                                                            <div>
-                                                              <span className="font-medium text-sm">{part.suggestedDeveloper}</span>
-                                                              <p className="text-xs text-muted-foreground">Suggested</p>
-                                                            </div>
-                                                        </div>
-                                                        <Button size="sm" onClick={() => handleAddDeveloper(part.part, part.suggestedDeveloper)}>Assign</Button>
-                                                    </div>
-                                                )}
                                             </div>
                                         </div>
                                         
@@ -425,6 +450,25 @@ export function ProjectGenesisClient() {
                                             </ScrollArea>
                                           </PopoverContent>
                                         </Popover>
+
+                                        <div>
+                                            <h4 className="text-sm font-semibold mb-2 mt-4">Associated Tickets</h4>
+                                            <div className="space-y-2">
+                                                {part.tickets.map((ticket, i) => {
+                                                    const StatusIcon = statusIcons[ticket.status];
+                                                    const iconColor = statusColors[ticket.status];
+                                                    return (
+                                                        <div key={i} className="flex items-start gap-3 p-2 bg-background rounded-lg">
+                                                            <StatusIcon className={`w-4 h-4 mt-1 text-white rounded-full p-0.5 ${iconColor} shrink-0`}/>
+                                                            <div>
+                                                                <p className="font-medium text-sm">{ticket.ticket}: <span className="font-normal">{ticket.description}</span></p>
+                                                                <Badge variant="outline" className="mt-1">{ticket.status}</Badge>
+                                                            </div>
+                                                        </div>
+                                                    )
+                                                })}
+                                            </div>
+                                        </div>
                                     </CardContent>
                                 </Card>
                             ))}
@@ -467,6 +511,12 @@ export function ProjectGenesisClient() {
         };
     }).sort((a, b) => b.score - a.score);
 
+
+    const getJiraTasksForDeveloper = (devName: string) => {
+        return analysisResult.projectBreakdown
+            .filter(part => (assignedDevelopers[part.part] || []).includes(devName))
+            .flatMap(part => part.tickets);
+    };
 
     return (
       <div className="w-full max-w-7xl grid gap-8 animate-in fade-in-50">
@@ -576,40 +626,43 @@ export function ProjectGenesisClient() {
                 </CardHeader>
                 <CardContent>
                 <Accordion type="single" collapsible className="w-full">
-                    {analysisResult.team.map((developer, index) => (
-                    <AccordionItem value={`item-${index}`} key={developer.name}>
-                        <AccordionTrigger>
-                        <div className="flex items-center gap-2">
-                            <Avatar className="w-6 h-6">
-                                <AvatarImage src={`https://placehold.co/100x100.png`} alt={developer.name} data-ai-hint="person avatar small"/>
-                                <AvatarFallback>{developer.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-                            </Avatar>
-                            <span className="font-medium">{developer.name}</span>
-                        </div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                        {developer.jiraTasks.length > 0 ? (
-                            <div className="space-y-3 pl-6">
-                                {developer.jiraTasks.map((task, i) => {
-                                    const StatusIcon = statusIcons[task.status];
-                                    const iconColor = statusColors[task.status];
-                                    return (
-                                        <div key={i} className="flex items-start gap-3 p-3 bg-secondary/50 rounded-lg">
-                                            <StatusIcon className={`w-5 h-5 mt-1 text-white rounded-full p-0.5 ${iconColor} shrink-0`}/>
-                                            <div>
-                                                <p className="font-medium text-sm">{task.ticket}: <span className="font-normal">{task.description}</span></p>
-                                                <Badge variant="outline" className="mt-1">{task.status}</Badge>
-                                            </div>
-                                        </div>
-                                    )
-                                })}
+                    {analysisResult.team.map((developer, index) => {
+                      const jiraTasks = getJiraTasksForDeveloper(developer.name);
+                      return (
+                        <AccordionItem value={`item-${index}`} key={developer.name}>
+                            <AccordionTrigger>
+                            <div className="flex items-center gap-2">
+                                <Avatar className="w-6 h-6">
+                                    <AvatarImage src={`https://placehold.co/100x100.png`} alt={developer.name} data-ai-hint="person avatar small"/>
+                                    <AvatarFallback>{developer.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                </Avatar>
+                                <span className="font-medium">{developer.name}</span>
                             </div>
-                        ) : (
-                            <p className="text-muted-foreground text-sm pl-6">No tasks assigned to this developer.</p>
-                        )}
-                        </AccordionContent>
-                    </AccordionItem>
-                    ))}
+                            </AccordionTrigger>
+                            <AccordionContent>
+                            {jiraTasks.length > 0 ? (
+                                <div className="space-y-3 pl-6">
+                                    {jiraTasks.map((task, i) => {
+                                        const StatusIcon = statusIcons[task.status];
+                                        const iconColor = statusColors[task.status];
+                                        return (
+                                            <div key={i} className="flex items-start gap-3 p-3 bg-secondary/50 rounded-lg">
+                                                <StatusIcon className={`w-5 h-5 mt-1 text-white rounded-full p-0.5 ${iconColor} shrink-0`}/>
+                                                <div>
+                                                    <p className="font-medium text-sm">{task.ticket}: <span className="font-normal">{task.description}</span></p>
+                                                    <Badge variant="outline" className="mt-1">{task.status}</Badge>
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            ) : (
+                                <p className="text-muted-foreground text-sm pl-6">No tasks assigned to this developer.</p>
+                            )}
+                            </AccordionContent>
+                        </AccordionItem>
+                      )
+                    })}
                 </Accordion>
                 </CardContent>
             </Card>
@@ -840,3 +893,5 @@ export function ProjectGenesisClient() {
     </div>
   );
 }
+
+    
