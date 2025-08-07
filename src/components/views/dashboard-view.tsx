@@ -181,23 +181,33 @@ export function DashboardView({
                     <CardTitle className="font-headline flex items-center gap-2"><Newspaper className="w-6 h-6" />Daily Updates</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <ScrollArea className="h-72">
-                        <div className="space-y-4">
-                            {analysisResult.dailyUpdates.map((update, index) => (
-                                <div key={index} className="flex items-start gap-3">
-                                    <Avatar className="w-8 h-8 mt-1">
-                                        <AvatarImage src={`https://placehold.co/100x100.png`} alt={update.developerName} data-ai-hint="person avatar small"/>
-                                        <AvatarFallback>{update.developerName.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <p className="text-sm font-medium">{update.developerName}</p>
-                                        <p className="text-sm text-muted-foreground">{update.update}</p>
-                                        <p className="text-xs text-muted-foreground/70 mt-1">{new Date(update.date).toLocaleDateString()}</p>
+                    {analysisResult.dailyUpdates.length > 0 ? (
+                        <ScrollArea className="h-72">
+                            <div className="space-y-4">
+                                {analysisResult.dailyUpdates.map((update, index) => (
+                                    <div key={index} className="flex items-start gap-3">
+                                        <Avatar className="w-8 h-8 mt-1">
+                                            <AvatarImage src={`https://placehold.co/100x100.png`} alt={update.developerName} data-ai-hint="person avatar small"/>
+                                            <AvatarFallback>{update.developerName.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <p className="text-sm font-medium">{update.developerName}</p>
+                                            <p className="text-sm text-muted-foreground">{update.update}</p>
+                                            <p className="text-xs text-muted-foreground/70 mt-1">{new Date(update.date).toLocaleDateString()}</p>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
+                        </ScrollArea>
+                    ) : (
+                        <div className="text-center text-muted-foreground h-48 flex flex-col items-center justify-center">
+                            <p>No daily updates yet.</p>
+                            <Button variant="outline" className="mt-4">
+                                <PlusCircle className="w-4 h-4 mr-2" />
+                                Add Update
+                            </Button>
                         </div>
-                    </ScrollArea>
+                    )}
                 </CardContent>
             </Card>
             <Card className="lg:col-span-1">
@@ -207,7 +217,7 @@ export function DashboardView({
                 </CardHeader>
                 <CardContent>
                     <ul className="space-y-4">
-                        {performanceData.slice(0, 5).map((dev, index) => (
+                        {analysisResult.team.slice(0, 5).map((dev) => (
                             <li key={dev.name} className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <Avatar className="w-9 h-9">
@@ -216,11 +226,11 @@ export function DashboardView({
                                     </Avatar>
                                     <div>
                                         <p className="font-medium text-sm">{dev.name}</p>
-                                        <p className="text-xs text-muted-foreground">{analysisResult.team.find(d => d.name === dev.name)?.skills.slice(0, 2).join(', ')}</p>
+                                        <p className="text-xs text-muted-foreground">{dev.skills.slice(0, 2).join(', ')}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-1 text-yellow-400">
-                                    <span className="font-bold text-sm">{Math.floor(dev.score / 5)}</span>
+                                    <span className="font-bold text-sm">0</span>
                                     <Star className="w-4 h-4 fill-current" />
                                 </div>
                             </li>

@@ -182,12 +182,7 @@ export function ProjectGenesisClient() {
         { name: 'David Lee', skills: ['AWS', 'Docker', 'CI/CD'], reasoning: 'DevOps expert to ensure smooth deployment and scaling.' },
         { name: 'Eve Davis', skills: ['UI/UX Design', 'Figma', 'CSS'], reasoning: 'Specializes in creating intuitive and beautiful user interfaces.' },
       ],
-      dailyUpdates: [
-        { developerName: 'Alice Johnson', update: 'Completed the basic layout for the user profile page.', date: '2024-07-31' },
-        { developerName: 'Bob Williams', update: 'Finalized the database schema for user profiles and posts.', date: '2024-07-31' },
-        { developerName: 'Charlie Brown', update: 'Started setting up the React Native environment.', date: '2024-07-31' },
-        { developerName: 'Alice Johnson', update: 'Implemented the authentication logic with Firebase.', date: '2024-07-30' },
-      ],
+      dailyUpdates: [],
     };
     
     try {
