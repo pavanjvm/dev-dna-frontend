@@ -1,19 +1,6 @@
 "use client";
 
 import { useState, useCallback, useMemo, ChangeEvent } from "react";
-import {
-  analyzeProjectRequirements,
-  AnalyzeProjectRequirementsOutput,
-} from "@/ai/flows/analyze-project-requirements";
-import {
-  recommendDevelopers,
-  RecommendDevelopersOutput,
-} from "@/ai/flows/recommend-developers";
-import {
-  createJiraTasks,
-  CreateJiraTasksOutput,
-} from "@/ai/flows/create-jira-tasks";
-
 import { useToast } from "@/hooks/use-toast";
 
 import { Button } from "@/components/ui/button";
@@ -59,6 +46,22 @@ import {
   CheckCircle,
 } from "lucide-react";
 
+// Mock types that were previously imported from AI flows
+type AnalyzeProjectRequirementsOutput = {
+  summary: string;
+  keyAspects: string;
+};
+
+type RecommendDevelopersOutput = {
+  name: string;
+  skills: string[];
+  reasoning: string;
+}[];
+
+type CreateJiraTasksOutput = {
+  jiraTaskDetails: string[];
+};
+
 type Step = "UPLOAD" | "SETUP" | "TEAM" | "JIRA" | "DASHBOARD";
 type Developer = RecommendDevelopersOutput[0];
 
@@ -103,15 +106,6 @@ export function ProjectGenesisClient() {
     }
   };
 
-  const readFileAsDataURL = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-      reader.readAsDataURL(file);
-    });
-  };
-
   const handleAnalyze = async () => {
     if (!file) {
       toast({
@@ -124,67 +118,45 @@ export function ProjectGenesisClient() {
 
     setIsLoading(true);
     setLoadingMessage("Analyzing project requirements...");
-    try {
-      const pdfDataUri = await readFileAsDataURL(file);
-      const result = await analyzeProjectRequirements({ pdfDataUri });
-      setAnalysis(result);
-      setStep("SETUP");
-    } catch (error) {
-      console.error(error);
-      toast({
-        variant: "destructive",
-        title: "Analysis Failed",
-        description: "Could not analyze the project requirements.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setAnalysis({
+      summary: "The project is a new social media platform for pet owners, allowing them to share photos, connect with others, and find pet-friendly locations.",
+      keyAspects: "User profiles, photo uploads, social feed, real-time chat, and a map integration for locations."
+    });
+    setStep("SETUP");
+    setIsLoading(false);
   };
 
   const handleRecommendDevelopers = async () => {
     if (!analysis) return;
     setIsLoading(true);
     setLoadingMessage("Recommending suitable developers...");
-    try {
-      const result = await recommendDevelopers({
-        projectRequirements: `${analysis.summary}\n${analysis.keyAspects}`,
-      });
-      setRecommendedDevs(result);
-      setStep("TEAM");
-    } catch (error) {
-      console.error(error);
-      toast({
-        variant: "destructive",
-        title: "Recommendation Failed",
-        description: "Could not recommend developers.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setRecommendedDevs([
+      { name: 'Alice Johnson', skills: ['React', 'Next.js', 'TypeScript'], reasoning: 'Experienced in frontend development with a strong focus on building scalable React applications.' },
+      { name: 'Bob Williams', skills: ['Node.js', 'GraphQL', 'PostgreSQL'], reasoning: 'Skilled in backend services and database management, perfect for the API and data layers.' },
+      { name: 'Charlie Brown', skills: ['React Native', 'Firebase', 'Mobile UI/UX'], reasoning: 'Has a background in mobile development, which will be crucial for the native app version.' },
+    ]);
+    setStep("TEAM");
+    setIsLoading(false);
   };
 
   const handleCreateJira = async () => {
     if (!analysis || !repoName || selectedDevs.length === 0) return;
     setIsLoading(true);
     setLoadingMessage("Creating Jira board and assigning tasks...");
-    try {
-      const result = await createJiraTasks({
-        projectRequirements: `${analysis.summary}\n${analysis.keyAspects}`,
-        developers: selectedDevs.map((d) => d.name),
-        projectName: repoName,
-      });
-      setJiraTasks(result);
-      setStep("DASHBOARD");
-    } catch (error) {
-      console.error(error);
-      toast({
-        variant: "destructive",
-        title: "Jira Integration Failed",
-        description: "Could not create Jira tasks.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setJiraTasks({
+      jiraTaskDetails: [
+        'PROJ-1: Setup user authentication flow - Assigned to Alice Johnson',
+        'PROJ-2: Design database schema for user profiles - Assigned to Bob Williams',
+        'PROJ-3: Implement photo upload service - Assigned to Alice Johnson',
+        'PROJ-4: Create API endpoint for social feed - Assigned to Bob Williams',
+        'PROJ-5: Develop real-time chat feature - Assigned to Charlie Brown',
+      ]
+    });
+    setStep("DASHBOARD");
+    setIsLoading(false);
   };
 
   const toggleDeveloperSelection = (dev: Developer, isSelected: boolean) => {
