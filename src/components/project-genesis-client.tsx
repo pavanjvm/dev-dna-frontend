@@ -44,6 +44,7 @@ import {
   Activity,
   Newspaper,
   Lightbulb,
+  Puzzle,
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 
@@ -57,6 +58,11 @@ type ProjectAnalysis = {
     name: string;
     url: string;
   };
+  projectBreakdown: {
+    part: string;
+    description: string;
+    suggestedDeveloper: string;
+  }[];
   team: {
     name: string;
     skills: string[];
@@ -115,6 +121,12 @@ export function ProjectGenesisClient() {
         name: "project-genesis-app",
         url: "https://github.com/example/project-genesis-app"
       },
+      projectBreakdown: [
+        { part: 'Frontend Development', description: 'Building the user interface and user experience.', suggestedDeveloper: 'Alice Johnson' },
+        { part: 'Backend API', description: 'Developing the server-side logic and data management.', suggestedDeveloper: 'Bob Williams' },
+        { part: 'Mobile App', description: 'Creating the native mobile application for iOS and Android.', suggestedDeveloper: 'Charlie Brown' },
+        { part: 'Deployment & Infrastructure', description: 'Managing cloud infrastructure and CI/CD pipelines.', suggestedDeveloper: 'David Lee' },
+      ],
       team: [
         { name: 'Alice Johnson', skills: ['React', 'Next.js', 'TypeScript'], reasoning: 'Experienced in frontend development with a strong focus on building scalable React applications.', featureSuggestions: ["Implement user authentication and profile pages.", "Develop a responsive and dynamic social feed."] },
         { name: 'Bob Williams', skills: ['Node.js', 'GraphQL', 'PostgreSQL'], reasoning: 'Skilled in backend services and database management, perfect for the API and data layers.', featureSuggestions: ["Design and build the database schema for users and posts.", "Create a GraphQL API for real-time chat functionality."] },
@@ -182,6 +194,39 @@ export function ProjectGenesisClient() {
               </div>
             </div>
           </CardHeader>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-headline flex items-center gap-2">
+              <Puzzle className="w-6 h-6" />
+              Project Breakdown
+            </CardTitle>
+            <CardDescription>
+              The project has been broken down into the following parts, with developers suggested based on their skills.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {analysisResult.projectBreakdown.map((part) => (
+                <Card key={part.part} className="bg-secondary/50">
+                  <CardHeader>
+                    <CardTitle className="text-lg">{part.part}</CardTitle>
+                    <CardDescription>{part.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Avatar className="w-6 h-6">
+                            <AvatarImage src={`https://placehold.co/100x100.png`} alt={part.suggestedDeveloper} data-ai-hint="person avatar small"/>
+                            <AvatarFallback>{part.suggestedDeveloper.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium text-muted-foreground">Suggested: <span className="text-foreground">{part.suggestedDeveloper}</span></span>
+                      </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </CardContent>
         </Card>
 
         <div className="grid lg:grid-cols-3 gap-6">
