@@ -429,22 +429,11 @@ export function ProjectGenesisClient() {
                                         </Popover>
 
                                         <div>
-                                            <h4 className="text-sm font-semibold mb-2 mt-4">Associated Tickets</h4>
-                                            <div className="space-y-2">
-                                                {part.tickets.map((ticket, i) => {
-                                                    const StatusIcon = statusIcons[ticket.status];
-                                                    const iconColor = statusColors[ticket.status];
-                                                    return (
-                                                        <div key={i} className="flex items-start gap-3 p-2 bg-background rounded-lg">
-                                                            <StatusIcon className={`w-4 h-4 mt-1 text-white rounded-full p-0.5 ${iconColor} shrink-0`}/>
-                                                            <div>
-                                                                <p className="font-medium text-sm">{ticket.ticket}: <span className="font-normal">{ticket.description}</span></p>
-                                                                <Badge variant="outline" className="mt-1">{ticket.status}</Badge>
-                                                            </div>
-                                                        </div>
-                                                    )
-                                                })}
-                                            </div>
+                                          <h4 className="text-sm font-semibold mb-2 mt-4">Associated Tickets</h4>
+                                          <Button variant="outline" className="w-full justify-start" disabled>
+                                              <PlusCircle className="mr-2 h-4 w-4" />
+                                              Add & Assign Ticket
+                                          </Button>
                                         </div>
                                     </CardContent>
                                 </Card>
