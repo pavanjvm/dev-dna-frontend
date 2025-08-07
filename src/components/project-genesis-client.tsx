@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, ChangeEvent, useEffect } from "react";
+import { useState, ChangeEvent } from "react";
 import { useToast } from "@/hooks/use-toast";
 import {
   BarChart,
@@ -24,26 +24,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -52,84 +33,58 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-
 import {
   UploadCloud,
   Loader2,
   FileText,
-  BrainCircuit,
   Github,
   Users,
-  Rocket,
   LayoutDashboard,
-  CheckCircle,
-  Newspaper,
   Calendar,
   Activity,
-  AlertTriangle,
+  Newspaper,
 } from "lucide-react";
 
-// Mock types that were previously imported from AI flows
-type AnalyzeProjectRequirementsOutput = {
-  summary: string;
-  keyAspects: string;
+// Mock types based on the new consolidated JSON structure
+type ProjectAnalysis = {
+  analysis: {
+    summary: string;
+    keyAspects: string;
+  };
+  repository: {
+    name: string;
+    url: string;
+  };
+  team: {
+    name: string;
+    skills: string[];
+    reasoning: string;
+  }[];
+  tasks: {
+    task: string;
+    assignee: string | null;
+  }[];
+  dailyUpdates: {
+    developer: string;
+    update: string;
+    date: string;
+  }[];
 };
 
-type RecommendDevelopersOutput = {
-  name: string;
-  skills: string[];
-  reasoning: string;
-}[];
-
-type CreateJiraTasksOutput = {
-  jiraTaskDetails: string[];
-};
-
-type DailyUpdate = {
-  developer: string;
-  update: string;
-  date: string;
-};
+type Developer = ProjectAnalysis["team"][0];
+type DailyUpdate = ProjectAnalysis["dailyUpdates"][0];
+type Task = ProjectAnalysis["tasks"][0];
 
 type PerformanceData = {
   name: string;
   contributionScore: number;
 }[];
 
-type Step = "UPLOAD" | "SETUP" | "TEAM" | "JIRA" | "DASHBOARD";
-type Developer = RecommendDevelopersOutput[0];
-type RepoOption = "new" | "existing";
-
-const stepConfig: Record<Step, { value: number; label: string }> = {
-  UPLOAD: { value: 0, label: "Upload" },
-  SETUP: { value: 25, label: "Analyze & Setup" },
-  TEAM: { value: 50, label: "Assemble Team" },
-  JIRA: { value: 75, label: "Generate Tasks" },
-  DASHBOARD: { value: 100, label: "Dashboard" },
-};
-
 export function ProjectGenesisClient() {
-  const [step, setStep] = useState<Step>("UPLOAD");
   const [isLoading, setIsLoading] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [analysis, setAnalysis] =
-    useState<AnalyzeProjectRequirementsOutput | null>(null);
-  const [repoName, setRepoName] = useState("project-genesis-app");
-  const [repoOption, setRepoOption] = useState<RepoOption>("new");
-  const [repoUrl, setRepoUrl] = useState("");
-  const [recommendedDevs, setRecommendedDevs] =
-    useState<RecommendDevelopersOutput | null>(null);
-  const [selectedDevs, setSelectedDevs] = useState<Developer[]>([]);
-  const [jiraTasks, setJiraTasks] = useState<CreateJiraTasksOutput | null>(
-    null
-  );
-  const [dailyUpdates, setDailyUpdates] = useState<DailyUpdate[]>([]);
+  const [analysisResult, setAnalysisResult] = useState<ProjectAnalysis | null>(null);
   const [performanceData, setPerformanceData] = useState<PerformanceData>([]);
-
 
   const { toast } = useToast();
 
@@ -149,6 +104,36 @@ export function ProjectGenesisClient() {
     }
   };
 
+  const calculatePerformanceMetrics = (
+    developers: Developer[],
+    tasks: Task[],
+    updates: DailyUpdate[]
+  ): PerformanceData => {
+    const scores: { [key: string]: number } = {};
+
+    developers.forEach(dev => {
+      scores[dev.name] = 0;
+    });
+
+    // 2 points per task
+    tasks.forEach(task => {
+      if (task.assignee && scores[task.assignee] !== undefined) {
+        scores[task.assignee] += 2;
+      }
+    });
+
+    // 1 point per update
+    updates.forEach(update => {
+      if (scores[update.developer] !== undefined) {
+        scores[update.developer] += 1;
+      }
+    });
+
+    return Object.entries(scores)
+      .map(([name, score]) => ({ name, contributionScore: score }))
+      .sort((a, b) => b.contributionScore - a.contributionScore);
+  };
+
   const handleAnalyze = async () => {
     if (!file) {
       toast({
@@ -160,118 +145,52 @@ export function ProjectGenesisClient() {
     }
 
     setIsLoading(true);
-    setLoadingMessage("Analyzing project requirements...");
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setAnalysis({
-      summary: "The project is a new social media platform for pet owners, allowing them to share photos, connect with others, and find pet-friendly locations.",
-      keyAspects: "User profiles, photo uploads, social feed, real-time chat, and a map integration for locations."
-    });
-    setStep("SETUP");
-    setIsLoading(false);
-  };
 
-  const handleRecommendDevelopers = async () => {
-    if (!analysis) return;
-    setIsLoading(true);
-    setLoadingMessage("Recommending suitable developers...");
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    const devs = [
-      { name: 'Alice Johnson', skills: ['React', 'Next.js', 'TypeScript'], reasoning: 'Experienced in frontend development with a strong focus on building scalable React applications.' },
-      { name: 'Bob Williams', skills: ['Node.js', 'GraphQL', 'PostgreSQL'], reasoning: 'Skilled in backend services and database management, perfect for the API and data layers.' },
-      { name: 'Charlie Brown', skills: ['React Native', 'Firebase', 'Mobile UI/UX'], reasoning: 'Has a background in mobile development, which will be crucial for the native app version.' },
-      { name: 'David Lee', skills: ['AWS', 'Docker', 'CI/CD'], reasoning: 'DevOps expert to ensure smooth deployment and scaling.' },
-      { name: 'Eve Davis', skills: ['UI/UX Design', 'Figma', 'CSS'], reasoning: 'Specializes in creating intuitive and beautiful user interfaces.' },
-    ];
-    setRecommendedDevs(devs);
-    // Auto-select all recommended devs for the mock
-    setSelectedDevs(devs);
-    setStep("TEAM");
-    setIsLoading(false);
-  };
+    // Mock AI call
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
-  const calculatePerformanceMetrics = (
-    developers: Developer[],
-    tasks: CreateJiraTasksOutput,
-    updates: DailyUpdate[]
-  ): PerformanceData => {
-    const scores: { [key: string]: number } = {};
-  
-    developers.forEach(dev => {
-      scores[dev.name] = 0;
-    });
-  
-    // 2 points per task
-    tasks.jiraTaskDetails.forEach(taskString => {
-      const { assignee } = parseJiraTask(taskString);
-      if (assignee && scores[assignee] !== undefined) {
-        scores[assignee] += 2;
-      }
-    });
-  
-    // 1 point per update
-    updates.forEach(update => {
-      if (scores[update.developer] !== undefined) {
-        scores[update.developer] += 1;
-      }
-    });
-  
-    return Object.entries(scores)
-      .map(([name, score]) => ({ name, contributionScore: score }))
-      .sort((a, b) => b.contributionScore - a.contributionScore);
-  };
-
-  const handleCreateJira = async () => {
-    if (!analysis || selectedDevs.length === 0) return;
-    setIsLoading(true);
-    setLoadingMessage("Creating Jira board and assigning tasks...");
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const newJiraTasks = {
-      jiraTaskDetails: [
-        'PROJ-1: Setup user authentication flow - Assigned to Alice Johnson',
-        'PROJ-2: Design database schema for user profiles - Assigned to Bob Williams',
-        'PROJ-3: Implement photo upload service - Assigned to Alice Johnson',
-        'PROJ-4: Create API endpoint for social feed - Assigned to Bob Williams',
-        'PROJ-5: Develop real-time chat feature - Assigned to Charlie Brown',
-        'PROJ-6: Configure CI/CD pipeline - Assigned to David Lee',
-        'PROJ-7: Design user profile page mockups - Assigned to Eve Davis',
-        'PROJ-8: Write unit tests for authentication - Assigned to Alice Johnson',
+    // Mock response based on the defined JSON structure
+    const result: ProjectAnalysis = {
+      analysis: {
+        summary: "The project is a new social media platform for pet owners, allowing them to share photos, connect with others, and find pet-friendly locations.",
+        keyAspects: "User profiles, photo uploads, social feed, real-time chat, and a map integration for locations."
+      },
+      repository: {
+        name: "project-genesis-app",
+        url: "https://github.com/example/project-genesis-app"
+      },
+      team: [
+        { name: 'Alice Johnson', skills: ['React', 'Next.js', 'TypeScript'], reasoning: 'Experienced in frontend development with a strong focus on building scalable React applications.' },
+        { name: 'Bob Williams', skills: ['Node.js', 'GraphQL', 'PostgreSQL'], reasoning: 'Skilled in backend services and database management, perfect for the API and data layers.' },
+        { name: 'Charlie Brown', skills: ['React Native', 'Firebase', 'Mobile UI/UX'], reasoning: 'Has a background in mobile development, which will be crucial for the native app version.' },
+        { name: 'David Lee', skills: ['AWS', 'Docker', 'CI/CD'], reasoning: 'DevOps expert to ensure smooth deployment and scaling.' },
+        { name: 'Eve Davis', skills: ['UI/UX Design', 'Figma', 'CSS'], reasoning: 'Specializes in creating intuitive and beautiful user interfaces.' },
+      ],
+      tasks: [
+        { task: 'PROJ-1: Setup user authentication flow', assignee: 'Alice Johnson' },
+        { task: 'PROJ-2: Design database schema for user profiles', assignee: 'Bob Williams' },
+        { task: 'PROJ-3: Implement photo upload service', assignee: 'Alice Johnson' },
+        { task: 'PROJ-4: Create API endpoint for social feed', assignee: 'Bob Williams' },
+        { task: 'PROJ-5: Develop real-time chat feature', assignee: 'Charlie Brown' },
+        { task: 'PROJ-6: Configure CI/CD pipeline', assignee: 'David Lee' },
+        { task: 'PROJ-7: Design user profile page mockups', assignee: 'Eve Davis' },
+        { task: 'PROJ-8: Write unit tests for authentication', assignee: 'Alice Johnson' },
+      ],
+      dailyUpdates: [
+        { developer: 'Alice Johnson', update: 'Completed the basic layout for the user profile page and started working on the authentication logic.', date: '2024-07-31' },
+        { developer: 'Bob Williams', update: 'Finalized the database schema for user profiles and posts. Began setting up the initial Express server.', date: '2024-07-31' },
+        { developer: 'Charlie Brown', update: 'Investigated options for the real-time chat feature. Decided on using Socket.IO and created a basic prototype.', date: '2024-07-31' },
+        { developer: 'Alice Johnson', update: 'Implemented JWT-based authentication and tested endpoints.', date: '2024-08-01' },
+        { developer: 'David Lee', update: 'Set up initial GitHub Actions workflow for linting and testing.', date: '2024-08-01' },
+        { developer: 'Eve Davis', update: 'Created wireframes and high-fidelity mockups for the main feed and profile pages.', date: '2024-08-01' },
       ]
     };
-    setJiraTasks(newJiraTasks);
 
-    const newDailyUpdates = [
-      { developer: 'Alice Johnson', update: 'Completed the basic layout for the user profile page and started working on the authentication logic.', date: '2024-07-29' },
-      { developer: 'Bob Williams', update: 'Finalized the database schema for user profiles and posts. Began setting up the initial Express server.', date: '2024-07-29' },
-      { developer: 'Charlie Brown', update: 'Investigated options for the real-time chat feature. Decided on using Socket.IO and created a basic prototype.', date: '2024-07-29' },
-      { developer: 'Alice Johnson', update: 'Implemented JWT-based authentication and tested endpoints.', date: '2024-07-30' },
-      { developer: 'David Lee', update: 'Set up initial GitHub Actions workflow for linting and testing.', date: '2024-07-30' },
-      { developer: 'Eve Davis', update: 'Created wireframes and high-fidelity mockups for the main feed and profile pages.', date: '2024-07-30' },
-    ];
-    setDailyUpdates(newDailyUpdates);
-    
-    const performance = calculatePerformanceMetrics(selectedDevs, newJiraTasks, newDailyUpdates);
+    setAnalysisResult(result);
+    const performance = calculatePerformanceMetrics(result.team, result.tasks, result.dailyUpdates);
     setPerformanceData(performance);
     
-    setStep("DASHBOARD");
     setIsLoading(false);
-  };
-
-  const handleSkipTaskAssignment = () => {
-    setJiraTasks({ jiraTaskDetails: [] });
-    setDailyUpdates([]);
-    setPerformanceData(
-      selectedDevs.map(dev => ({ name: dev.name, contributionScore: 0 }))
-    );
-    setStep("DASHBOARD");
-  }
-
-  const toggleDeveloperSelection = (dev: Developer, isSelected: boolean) => {
-    if (isSelected) {
-      setSelectedDevs((prev) => [...prev, dev]);
-    } else {
-      setSelectedDevs((prev) => prev.filter((d) => d.name !== dev.name));
-    }
   };
 
   const renderUploadStep = () => (
@@ -303,287 +222,27 @@ export function ProjectGenesisClient() {
         </div>
       </CardContent>
       <CardFooter className="justify-center">
-        <Button onClick={handleAnalyze} disabled={!file} size="lg">
-          Analyze Project
+        <Button onClick={handleAnalyze} disabled={!file || isLoading} size="lg">
+          {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          {isLoading ? "Analyzing..." : "Analyze Project"}
         </Button>
       </CardFooter>
     </Card>
   );
 
-  const isRepoSetupValid = () => {
-    if (repoOption === "new") return !!repoName;
-    if (repoOption === "existing") return !!repoUrl;
-    return false;
-  };
-  
-  const renderSetupStep = () =>
-    analysis && (
-      <div className="w-full max-w-4xl grid gap-8">
-        <div className="text-center">
-          <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
-          <h2 className="font-headline text-3xl">Analysis Complete</h2>
-          <p className="text-muted-foreground">
-            Here is a summary of your project. Next, let's set up the
-            repository.
-          </p>
-        </div>
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader className="flex-row items-center gap-4">
-              <FileText className="w-8 h-8 text-primary" />
-              <CardTitle className="font-headline">Project Summary</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">{analysis.summary}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex-row items-center gap-4">
-              <BrainCircuit className="w-8 h-8 text-primary" />
-              <CardTitle className="font-headline">Key Aspects</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">{analysis.keyAspects}</p>
-            </CardContent>
-          </Card>
-        </div>
-        <Card>
-          <CardHeader className="flex-row items-center gap-4">
-            <Github className="w-8 h-8 text-primary" />
-            <CardTitle className="font-headline">Repository Setup</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <RadioGroup
-              defaultValue="new"
-              onValueChange={(value: string) =>
-                setRepoOption(value as RepoOption)
-              }
-              className="grid grid-cols-2 gap-4"
-            >
-              <div>
-                <RadioGroupItem value="new" id="r1" className="peer sr-only" />
-                <Label
-                  htmlFor="r1"
-                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                >
-                  Create New Repository
-                </Label>
-              </div>
-              <div>
-                <RadioGroupItem
-                  value="existing"
-                  id="r2"
-                  className="peer sr-only"
-                />
-                <Label
-                  htmlFor="r2"
-                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                >
-                  Use Existing Repository
-                </Label>
-              </div>
-            </RadioGroup>
-            {repoOption === "new" ? (
-              <div className="space-y-2">
-                <Label htmlFor="repo-name">Repository Name</Label>
-                <Input
-                  id="repo-name"
-                  placeholder="e.g., project-genesis-app"
-                  value={repoName}
-                  onChange={(e) => setRepoName(e.target.value)}
-                />
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Label htmlFor="repo-url">Repository URL</Label>
-                <Input
-                  id="repo-url"
-                  placeholder="e.g., https://github.com/user/repo"
-                  value={repoUrl}
-                  onChange={(e) => setRepoUrl(e.target.value)}
-                />
-              </div>
-            )}
-          </CardContent>
-          <CardFooter>
-            <Button
-              onClick={handleRecommendDevelopers}
-              disabled={!isRepoSetupValid()}
-              size="lg"
-            >
-              Set Up & Find Team
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-    );
-
-  const renderTeamStep = () => (
-    <div className="w-full max-w-6xl grid gap-8">
-      <div className="text-center">
-        <Users className="w-12 h-12 text-primary mx-auto mb-4" />
-        <h2 className="font-headline text-3xl">Assemble Your Team</h2>
-        <p className="text-muted-foreground">
-          Here are the recommended developers based on your project needs.
-        </p>
-      </div>
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {recommendedDevs ? (
-          recommendedDevs.map((dev, i) => (
-            <Card key={i} className="flex flex-col">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="w-12 h-12">
-                      <AvatarImage
-                        src={`https://placehold.co/100x100.png`}
-                        alt={dev.name}
-                        data-ai-hint="person portrait"
-                      />
-                      <AvatarFallback>
-                        {dev.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <CardTitle>{dev.name}</CardTitle>
-                      <CardDescription>Developer</CardDescription>
-                    </div>
-                  </div>
-                  <Checkbox
-                    className="w-5 h-5"
-                    checked={selectedDevs.some(d => d.name === dev.name)}
-                    onCheckedChange={(checked) =>
-                      toggleDeveloperSelection(dev, !!checked)
-                    }
-                  />
-                </div>
-              </CardHeader>
-              <CardContent className="flex-grow">
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {dev.skills.map((skill) => (
-                    <Badge key={skill} variant="secondary">
-                      {skill}
-                    </Badge>
-                  ))}
-                </div>
-                <Accordion type="single" collapsible>
-                  <AccordionItem value="reasoning">
-                    <AccordionTrigger>View Reasoning</AccordionTrigger>
-                    <AccordionContent>{dev.reasoning}</AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          [...Array(3)].map((_, i) => (
-            <Card key={i}>
-              <CardHeader>
-                <div className="flex items-center gap-4">
-                  <Skeleton className="w-12 h-12 rounded-full" />
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-[150px]" />
-                    <Skeleton className="h-4 w-[100px]" />
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-20 w-full" />
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
-      <div className="flex justify-center">
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button
-              disabled={selectedDevs.length === 0}
-              size="lg"
-            >
-              Finalize Team & Generate Tasks
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle className="flex items-center gap-2">
-                <AlertTriangle className="text-yellow-500" />
-                Assign Tasks to Developers?
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                Do you want to automatically assign the generated tasks to the selected developers? You can skip this and create the dashboard without assignments.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={handleSkipTaskAssignment}>
-                No, skip
-              </AlertDialogCancel>
-              <AlertDialogAction onClick={handleCreateJira}>
-                Yes, assign tasks
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
-    </div>
-  );
-  
-  // This step is now skipped and logic is combined with team step.
-  const renderJiraStep = () => null;
-
-  const parseJiraTask = (taskString: string) => {
-    let task = taskString;
-    let assignee: string | null = null;
-    if (taskString.includes(" - Assigned to ")) {
-      const parts = taskString.split(" - Assigned to ");
-      task = parts[0];
-      assignee = parts[1];
-    }
-    return { task, assignee };
-  };
-
-  const getRepoUrl = () => {
-    if (repoOption === 'new') {
-        return `https://github.com/new/${repoName}`;
-    }
-    return repoUrl;
-  }
-
-  const getRepoName = () => {
-    if (repoOption === 'new') {
-      return repoName;
-    }
-    // Attempt to parse name from URL
-    try {
-      const url = new URL(repoUrl);
-      const pathParts = url.pathname.split('/').filter(p => p);
-      if (pathParts.length >= 2) {
-        return pathParts.slice(-2).join('/');
-      }
-    } catch (e) {
-      // It might not be a valid URL, return the raw string
-      return repoUrl;
-    }
-    return repoUrl;
-  }
-
   const renderDashboardStep = () =>
-    analysis &&
-    jiraTasks && (
+    analysisResult && (
       <div className="w-full max-w-7xl grid gap-8">
         <Card>
           <CardHeader>
             <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
               <LayoutDashboard className="w-10 h-10 text-primary hidden md:block" />
               <div className="flex-grow">
-                <CardTitle className="font-headline text-4xl">{getRepoName()}</CardTitle>
-                <CardDescription className="text-base mt-1">{analysis.summary}</CardDescription>
-                <a href={getRepoUrl()} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1 mt-2">
+                <CardTitle className="font-headline text-4xl">{analysisResult.repository.name}</CardTitle>
+                <CardDescription className="text-base mt-1">{analysisResult.analysis.summary}</CardDescription>
+                <a href={analysisResult.repository.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1 mt-2">
                     <Github className="w-4 h-4" />
-                    {getRepoUrl()}
+                    {analysisResult.repository.url}
                 </a>
               </div>
             </div>
@@ -606,7 +265,7 @@ export function ProjectGenesisClient() {
                         ))}
                     </div>
                     <div className="text-sm">
-                        <p className="font-semibold">{selectedDevs.length} Developers</p>
+                        <p className="font-semibold">{analysisResult.team.length} Developers</p>
                         <p className="text-muted-foreground">Top contributors shown</p>
                     </div>
                 </div>
@@ -617,7 +276,7 @@ export function ProjectGenesisClient() {
               <CardTitle className="font-headline flex items-center gap-2"><FileText className="w-6 h-6"/>Task Assignments</CardTitle>
             </CardHeader>
             <CardContent>
-              {jiraTasks.jiraTaskDetails.length > 0 ? (
+              {analysisResult.tasks.length > 0 ? (
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -626,13 +285,12 @@ export function ProjectGenesisClient() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {jiraTasks.jiraTaskDetails.map((taskString, i) => {
-                      const { task, assignee } = parseJiraTask(taskString);
+                    {analysisResult.tasks.map((task, i) => {
                       return (
                         <TableRow key={i}>
-                          <TableCell className="font-medium">{task}</TableCell>
+                          <TableCell className="font-medium">{task.task}</TableCell>
                           <TableCell>
-                            {assignee || (
+                            {task.assignee || (
                               <span className="text-muted-foreground">
                                 Unassigned
                               </span>
@@ -697,7 +355,7 @@ export function ProjectGenesisClient() {
               <CardTitle className="font-headline flex items-center gap-2"><Newspaper className="w-6 h-6"/>Daily Updates</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {dailyUpdates.length > 0 ? dailyUpdates.map((update, i) => (
+              {analysisResult.dailyUpdates.length > 0 ? analysisResult.dailyUpdates.map((update, i) => (
                 <div key={i} className="flex gap-4">
                     <Avatar>
                         <AvatarImage src={`https://placehold.co/100x100.png`} alt={update.developer} data-ai-hint="person icon"/>
@@ -725,55 +383,23 @@ export function ProjectGenesisClient() {
     );
 
   const renderContent = () => {
-    switch (step) {
-      case "UPLOAD":
-        return renderUploadStep();
-      case "SETUP":
-        return renderSetupStep();
-      case "TEAM":
-        return renderTeamStep();
-      case "JIRA":
-        // This step is now logically skipped.
-        return null; 
-      case "DASHBOARD":
-        return renderDashboardStep();
-      default:
-        return null;
+    if (isLoading) {
+      return (
+        <div className="flex flex-col items-center gap-4 text-center">
+            <Loader2 className="w-16 h-16 animate-spin text-primary" />
+            <p className="text-muted-foreground text-lg">Analyzing your project...</p>
+            <p className="text-sm text-muted-foreground">This may take a moment. The agent is assembling your team and tasks.</p>
+        </div>
+      );
     }
-  };
-  
-  const MainContent = () => {
-    if (step === 'DASHBOARD') {
+
+    if (analysisResult) {
       return renderDashboardStep();
     }
-    
-    return (
-       <>
-        <div className="w-full max-w-2xl mx-auto mb-12">
-            <Progress value={stepConfig[step].value} className="w-full" />
-            <div className="flex justify-between mt-2 text-sm text-muted-foreground">
-            {Object.entries(stepConfig)
-                .filter(([key, s]) => s.value <= stepConfig[step].value)
-                .map(([key, s]) => (
-                <span key={s.label}>{s.label}</span>
-                ))}
-            </div>
-        </div>
 
-        <div className="flex items-center justify-center">
-            {isLoading ? (
-            <div className="flex flex-col items-center gap-4">
-                <Loader2 className="w-16 h-16 animate-spin text-primary" />
-                <p className="text-muted-foreground text-lg">{loadingMessage}</p>
-            </div>
-            ) : (
-            renderContent()
-            )}
-        </div>
-       </>
-    );
-  }
-
+    return renderUploadStep();
+  };
+  
   return (
     <div className="container mx-auto p-4 md:p-8">
       <div className="text-center mb-8">
@@ -781,14 +407,16 @@ export function ProjectGenesisClient() {
           Project Genesis
         </h1>
         <p className="text-muted-foreground text-lg">
-          {step === 'DASHBOARD' 
+          {analysisResult 
             ? 'Your project dashboard is live.' 
             : 'Intelligently kickstart your software projects.'
           }
         </p>
       </div>
       
-      <MainContent/>
+      <div className="flex items-start justify-center">
+        {renderContent()}
+      </div>
     </div>
   );
 }
