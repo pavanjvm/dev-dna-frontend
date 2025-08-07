@@ -30,6 +30,17 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -58,6 +69,7 @@ import {
   Newspaper,
   Calendar,
   Activity,
+  AlertTriangle,
 } from "lucide-react";
 
 // Mock types that were previously imported from AI flows
@@ -244,6 +256,15 @@ export function ProjectGenesisClient() {
     setStep("DASHBOARD");
     setIsLoading(false);
   };
+
+  const handleSkipTaskAssignment = () => {
+    setJiraTasks({ jiraTaskDetails: [] });
+    setDailyUpdates([]);
+    setPerformanceData(
+      selectedDevs.map(dev => ({ name: dev.name, contributionScore: 0 }))
+    );
+    setStep("DASHBOARD");
+  }
 
   const toggleDeveloperSelection = (dev: Developer, isSelected: boolean) => {
     if (isSelected) {
@@ -477,13 +498,35 @@ export function ProjectGenesisClient() {
         )}
       </div>
       <div className="flex justify-center">
-        <Button
-          onClick={handleCreateJira}
-          disabled={selectedDevs.length === 0}
-          size="lg"
-        >
-          Finalize Team & Generate Tasks
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              disabled={selectedDevs.length === 0}
+              size="lg"
+            >
+              Finalize Team & Generate Tasks
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="text-yellow-500" />
+                Assign Tasks to Developers?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Do you want to automatically assign the generated tasks to the selected developers? You can skip this and create the dashboard without assignments.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={handleSkipTaskAssignment}>
+                No, skip
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={handleCreateJira}>
+                Yes, assign tasks
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
@@ -574,31 +617,37 @@ export function ProjectGenesisClient() {
               <CardTitle className="font-headline flex items-center gap-2"><FileText className="w-6 h-6"/>Task Assignments</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Task</TableHead>
-                    <TableHead>Assigned To</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {jiraTasks.jiraTaskDetails.map((taskString, i) => {
-                    const { task, assignee } = parseJiraTask(taskString);
-                    return (
-                      <TableRow key={i}>
-                        <TableCell className="font-medium">{task}</TableCell>
-                        <TableCell>
-                          {assignee || (
-                            <span className="text-muted-foreground">
-                              Unassigned
-                            </span>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+              {jiraTasks.jiraTaskDetails.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Task</TableHead>
+                      <TableHead>Assigned To</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {jiraTasks.jiraTaskDetails.map((taskString, i) => {
+                      const { task, assignee } = parseJiraTask(taskString);
+                      return (
+                        <TableRow key={i}>
+                          <TableCell className="font-medium">{task}</TableCell>
+                          <TableCell>
+                            {assignee || (
+                              <span className="text-muted-foreground">
+                                Unassigned
+                              </span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center text-muted-foreground py-8">
+                  <p>No tasks have been assigned yet.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -609,31 +658,37 @@ export function ProjectGenesisClient() {
             <CardDescription>Developer contribution scores based on tasks and updates.</CardDescription>
           </CardHeader>
           <CardContent>
-             <div className="w-full h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                    data={performanceData}
-                    margin={{
-                        top: 5,
-                        right: 30,
-                        left: 20,
-                        bottom: 5,
-                    }}
-                    >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip
-                        contentStyle={{
-                            backgroundColor: 'hsl(var(--background))',
-                            borderColor: 'hsl(var(--border))'
-                        }}
-                    />
-                    <Legend />
-                    <Bar dataKey="contributionScore" fill="hsl(var(--primary))" name="Contribution Score" />
-                    </BarChart>
-                </ResponsiveContainer>
-             </div>
+             {performanceData.length > 0 && performanceData.some(p => p.contributionScore > 0) ? (
+              <div className="w-full h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                      data={performanceData}
+                      margin={{
+                          top: 5,
+                          right: 30,
+                          left: 20,
+                          bottom: 5,
+                      }}
+                      >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip
+                          contentStyle={{
+                              backgroundColor: 'hsl(var(--background))',
+                              borderColor: 'hsl(var(--border))'
+                          }}
+                      />
+                      <Legend />
+                      <Bar dataKey="contributionScore" fill="hsl(var(--primary))" name="Contribution Score" />
+                      </BarChart>
+                  </ResponsiveContainer>
+              </div>
+             ) : (
+              <div className="text-center text-muted-foreground py-8">
+                <p>No performance data available yet.</p>
+              </div>
+             )}
           </CardContent>
         </Card>
 
@@ -642,7 +697,7 @@ export function ProjectGenesisClient() {
               <CardTitle className="font-headline flex items-center gap-2"><Newspaper className="w-6 h-6"/>Daily Updates</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {dailyUpdates.map((update, i) => (
+              {dailyUpdates.length > 0 ? dailyUpdates.map((update, i) => (
                 <div key={i} className="flex gap-4">
                     <Avatar>
                         <AvatarImage src={`https://placehold.co/100x100.png`} alt={update.developer} data-ai-hint="person icon"/>
@@ -659,7 +714,11 @@ export function ProjectGenesisClient() {
                         <p className="text-muted-foreground mt-1">{update.update}</p>
                     </div>
                 </div>
-              ))}
+              )) : (
+                <div className="text-center text-muted-foreground py-8">
+                  <p>No daily updates have been posted.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
       </div>
