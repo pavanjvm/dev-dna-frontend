@@ -1,12 +1,16 @@
 
-import { ProjectAnalysis, JiraTaskStatus, View, SetupStep } from '@/components/project-genesis-client';
+import { useState } from 'react';
+import type { ProjectAnalysis, JiraTaskStatus, View, SetupStep } from '@/components/project-genesis-client';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LayoutDashboard, Github, Puzzle, Users, Ticket, Circle, CheckCircle2, XCircle, Clock, Newspaper, Star, PlusCircle } from "lucide-react";
 
 type DashboardViewProps = {
@@ -43,6 +47,9 @@ export function DashboardView({
     setSetupStep,
 }: DashboardViewProps) {
     if (!analysisResult) return null;
+
+    const [ticketTitle, setTicketTitle] = useState('');
+    const [ticketAssignee, setTicketAssignee] = useState('');
 
     const performanceData = analysisResult.team.map(dev => {
         const assignedCount = Object.values(assignedDevelopers).flat().filter(d => d === dev.name).length;
@@ -167,10 +174,61 @@ export function DashboardView({
                     <CardDescription>Tasks assigned to developers for this project.</CardDescription>
                 </CardHeader>
                 <CardContent className="flex items-center justify-center h-48">
-                  <Button variant="outline">
-                    <PlusCircle className="w-4 h-4 mr-2" />
-                    Create Tickets
-                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline">
+                        <PlusCircle className="w-4 h-4 mr-2" />
+                        Create Tickets
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                        <DialogTitle>Create New Ticket</DialogTitle>
+                        <DialogDescription>
+                          Add a title and assign the ticket to a developer. Click create when you're done.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="title" className="text-right">
+                            Title
+                          </Label>
+                          <Input
+                            id="title"
+                            value={ticketTitle}
+                            onChange={(e) => setTicketTitle(e.target.value)}
+                            className="col-span-3"
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="assignee" className="text-right">
+                            Assign to
+                          </Label>
+                          <Select value={ticketAssignee} onValueChange={setTicketAssignee}>
+                            <SelectTrigger className="col-span-3">
+                              <SelectValue placeholder="Select a developer" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {analysisResult.team.map((dev) => (
+                                <SelectItem key={dev.name} value={dev.name}>
+                                  <div className="flex items-center gap-2">
+                                    <Avatar className="w-6 h-6">
+                                      <AvatarImage src={`https://placehold.co/100x100.png`} alt={dev.name} data-ai-hint="person avatar small"/>
+                                      <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                    </Avatar>
+                                    <span>{dev.name}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button type="submit">Create Ticket</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </CardContent>
             </Card>
         </div>
@@ -242,3 +300,5 @@ export function DashboardView({
       </div>
     );
 }
+
+    
