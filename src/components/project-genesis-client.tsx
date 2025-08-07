@@ -86,8 +86,8 @@ type ProjectAnalysis = {
   }[];
 };
 
-type View = 'upload' | 'setup' | 'dashboard' | 'breakdown';
-type SetupStep = 'repository' | 'team' | 'assign';
+type View = 'upload' | 'setup' | 'dashboard';
+type SetupStep = 'repository' | 'breakdown';
 
 export function ProjectGenesisClient() {
   const [isLoading, setIsLoading] = useState(false);
@@ -98,6 +98,7 @@ export function ProjectGenesisClient() {
   const [searchQuery, setSearchQuery] = useState('');
   const [repoOption, setRepoOption] = useState('create');
   const [repoUrl, setRepoUrl] = useState('');
+  const [repoName, setRepoName] = useState('project-genesis-app');
   const [assignedDevelopers, setAssignedDevelopers] = useState<Record<string, string[]>>({});
 
   const { toast } = useToast();
@@ -157,6 +158,8 @@ export function ProjectGenesisClient() {
     };
 
     setAnalysisResult(result);
+    setRepoName(result.repository.name);
+
     // Initialize assigned developers with suggestions
     const initialAssignments: Record<string, string[]> = {};
     result.projectBreakdown.forEach(part => {
@@ -231,6 +234,12 @@ export function ProjectGenesisClient() {
                 </Label>
               </div>
             </RadioGroup>
+            {repoOption === 'create' && (
+              <div className="mt-4">
+                <Label htmlFor="repo-name">Repository Name</Label>
+                <Input id="repo-name" placeholder="my-awesome-project" value={repoName} onChange={(e) => setRepoName(e.target.value)} />
+              </div>
+            )}
             {repoOption === 'existing' && (
               <div className="mt-4">
                 <Label htmlFor="repo-url">Repository URL</Label>
@@ -239,76 +248,155 @@ export function ProjectGenesisClient() {
             )}
           </CardContent>
           <CardFooter>
-            <Button onClick={() => setSetupStep('team')} className="ml-auto">
+            <Button onClick={() => setSetupStep('breakdown')} className="ml-auto">
                 Next <ChevronRight className="w-4 h-4" />
             </Button>
           </CardFooter>
         </Card>
     );
+    
+    const renderBreakdownSetupStep = () => {
+        if (!analysisResult) return null;
+        const filteredDevelopers = analysisResult.team.filter(dev => 
+            dev.name.toLowerCase().includes(searchQuery.toLowerCase())
+        );
 
-    const renderTeamStep = () => (
-        <Card className="w-full max-w-2xl">
-            <CardHeader>
-                <CardTitle>Review Your Team</CardTitle>
-                <CardDescription>Here is the team suggested by the analysis. You can assign them to project parts in the next step.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="space-y-4">
-                    {analysisResult.team.map(dev => (
-                        <div key={dev.name} className="flex items-center gap-4 p-3 bg-secondary/50 rounded-lg">
-                             <Avatar className="w-10 h-10">
-                                <AvatarImage src={`https://placehold.co/100x100.png`} alt={dev.name} data-ai-hint="person avatar"/>
-                                <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-                            </Avatar>
-                            <div className="flex-grow">
-                                <p className="font-semibold">{dev.name}</p>
-                                <p className="text-sm text-muted-foreground">{dev.skills.join(', ')}</p>
-                            </div>
-                            <p className="text-sm text-muted-foreground flex-shrink-0 max-w-xs">{dev.reasoning}</p>
+        const handleAddDeveloper = (part: string, devName: string) => {
+            setAssignedDevelopers(prev => ({
+                ...prev,
+                [part]: [...(prev[part] || []), devName]
+            }));
+        };
+
+        const handleRemoveDeveloper = (part: string, devName: string) => {
+            setAssignedDevelopers(prev => ({
+                ...prev,
+                [part]: prev[part].filter(d => d !== devName)
+            }));
+        };
+
+        return (
+            <Card className="w-full max-w-7xl animate-in fade-in-50">
+                 <CardHeader>
+                    <CardTitle>Project Breakdown & Assignments</CardTitle>
+                    <CardDescription>Assign developers to each part of the project.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <TooltipProvider>
+                    <ScrollArea className="w-full pb-4">
+                        <div className="flex gap-6">
+                            {analysisResult.projectBreakdown.map((part) => (
+                                <Card key={part.part} className="w-[350px] shrink-0 bg-secondary/50">
+                                    <CardHeader>
+                                        <CardTitle className="text-xl">{part.part}</CardTitle>
+                                        <CardDescription>{part.description}</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div>
+                                            <h4 className="text-sm font-semibold mb-2">Assigned Developers</h4>
+                                            <div className="space-y-2 min-h-[6rem]">
+                                                {(assignedDevelopers[part.part] || []).map(devName => (
+                                                    <div key={devName} className="flex items-center justify-between p-2 bg-background rounded-lg">
+                                                        <div className="flex items-center gap-2">
+                                                            <Avatar className="w-8 h-8">
+                                                                <AvatarImage src={`https://placehold.co/100x100.png`} alt={devName} data-ai-hint="person avatar"/>
+                                                                <AvatarFallback>{devName.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                                            </Avatar>
+                                                            <span className="font-medium text-sm">{devName}</span>
+                                                        </div>
+                                                        <Button size="sm" variant="ghost" onClick={() => handleRemoveDeveloper(part.part, devName)}>Remove</Button>
+                                                    </div>
+                                                ))}
+                                                {part.suggestedDeveloper && !(assignedDevelopers[part.part] || []).includes(part.suggestedDeveloper) && (
+                                                    <div className="flex items-center justify-between p-2 border-2 border-dashed rounded-lg">
+                                                        <div className="flex items-center gap-2">
+                                                            <Avatar className="w-8 h-8 opacity-70">
+                                                                <AvatarImage src={`https://placehold.co/100x100.png`} alt={part.suggestedDeveloper} data-ai-hint="person avatar"/>
+                                                                <AvatarFallback>{part.suggestedDeveloper.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                                            </Avatar>
+                                                            <div>
+                                                              <span className="font-medium text-sm">{part.suggestedDeveloper}</span>
+                                                              <p className="text-xs text-muted-foreground">Suggested</p>
+                                                            </div>
+                                                        </div>
+                                                        <Button size="sm" onClick={() => handleAddDeveloper(part.part, part.suggestedDeveloper)}>Assign</Button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        
+                                        <Popover>
+                                          <PopoverTrigger asChild>
+                                            <Button variant="outline" className="w-full justify-start">
+                                              <PlusCircle className="mr-2 h-4 w-4" />
+                                              Add developer
+                                            </Button>
+                                          </PopoverTrigger>
+                                          <PopoverContent className="w-[300px] p-0" align="start">
+                                            <div className="p-2">
+                                              <div className="relative">
+                                                <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
+                                                <Input 
+                                                    placeholder="Search developers..." 
+                                                    className="pl-8" 
+                                                    value={searchQuery}
+                                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                                />
+                                              </div>
+                                            </div>
+                                            <ScrollArea className="h-48">
+                                                <div className="space-y-1 p-2">
+                                                {filteredDevelopers
+                                                  .filter(dev => !(assignedDevelopers[part.part] || []).includes(dev.name))
+                                                  .map(dev => (
+                                                    <Tooltip key={dev.name} delayDuration={300}>
+                                                      <TooltipTrigger asChild>
+                                                        <div className="flex items-center justify-between p-2 rounded-md hover:bg-secondary cursor-pointer" onClick={() => handleAddDeveloper(part.part, dev.name)}>
+                                                            <div className="flex items-center gap-2">
+                                                                <Avatar className="w-6 h-6">
+                                                                    <AvatarImage src={`https://placehold.co/100x100.png`} alt={dev.name} data-ai-hint="person avatar small"/>
+                                                                    <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                                                </Avatar>
+                                                                <span className="text-sm font-medium">{dev.name}</span>
+                                                            </div>
+                                                            <Button variant="ghost" size="sm"><UserPlus className="h-4 w-4"/></Button>
+                                                        </div>
+                                                      </TooltipTrigger>
+                                                      <TooltipContent side="right" align="center">
+                                                        <p className="font-semibold">Top Skills</p>
+                                                        <ul className="list-disc list-inside text-muted-foreground">
+                                                          {dev.skills.slice(0, 3).map(skill => <li key={skill}>{skill}</li>)}
+                                                        </ul>
+                                                      </TooltipContent>
+                                                    </Tooltip>
+                                                ))}
+                                                </div>
+                                            </ScrollArea>
+                                          </PopoverContent>
+                                        </Popover>
+                                    </CardContent>
+                                </Card>
+                            ))}
                         </div>
-                    ))}
-                </div>
-            </CardContent>
-             <CardFooter>
-                <Button variant="outline" onClick={() => setSetupStep('repository')}>
-                    <ArrowLeft className="w-4 h-4" /> Back
-                </Button>
-                <Button onClick={() => setSetupStep('assign')} className="ml-auto">
-                    Next <ChevronRight className="w-4 h-4" />
-                </Button>
-            </CardFooter>
-        </Card>
-    );
-
-    const renderAssignStep = () => (
-        <Card className="w-full max-w-md">
-            <CardHeader>
-                <CardTitle>Assign Tasks</CardTitle>
-                <CardDescription>Do you want to assign initial feature suggestions to the team members?</CardDescription>
-            </CardHeader>
-            <CardContent className="flex justify-center items-center gap-4">
-                <Lightbulb className="w-16 h-16 text-primary" />
-                <p>This will create initial tasks based on the feature suggestions for each developer.</p>
-            </CardContent>
-            <CardFooter>
-                <Button variant="outline" onClick={() => setSetupStep('team')}>
-                    <ArrowLeft className="w-4 h-4" /> Back
-                </Button>
-                <div className="ml-auto flex gap-2">
-                    <Button variant="ghost" onClick={() => setCurrentView('dashboard')}>Skip</Button>
-                    <Button onClick={() => setCurrentView('dashboard')}>
-                        Yes, Assign Tasks <Check className="w-4 h-4" />
-                    </Button>
-                </div>
-            </CardFooter>
-        </Card>
-    );
+                        <ScrollBar orientation="horizontal" />
+                    </ScrollArea>
+                  </TooltipProvider>
+                </CardContent>
+                <CardFooter>
+                  <Button variant="outline" onClick={() => setSetupStep('repository')}>
+                      <ArrowLeft className="w-4 h-4" /> Back
+                  </Button>
+                  <Button onClick={() => setCurrentView('dashboard')} className="ml-auto">
+                      Create Project <Check className="w-4 h-4" />
+                  </Button>
+              </CardFooter>
+            </Card>
+        );
+    };
 
     switch(setupStep) {
-        case 'team':
-            return renderTeamStep();
-        case 'assign':
-            return renderAssignStep();
+        case 'breakdown':
+            return renderBreakdownSetupStep();
         case 'repository':
         default:
             return renderRepoStep();
@@ -324,11 +412,11 @@ export function ProjectGenesisClient() {
             <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
               <LayoutDashboard className="w-10 h-10 text-primary hidden md:block" />
               <div className="flex-grow">
-                <CardTitle className="font-headline text-4xl">{analysisResult.repository.name}</CardTitle>
+                <CardTitle className="font-headline text-4xl">{repoOption === 'create' ? repoName : analysisResult.repository.name}</CardTitle>
                 <CardDescription className="text-base mt-1">{analysisResult.analysis.summary}</CardDescription>
-                <a href={analysisResult.repository.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1 mt-2">
+                <a href={repoOption === 'create' ? `https://github.com/example/${repoName}` : repoUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1 mt-2">
                     <Github className="w-4 h-4" />
-                    {analysisResult.repository.url}
+                    {repoOption === 'create' ? `https://github.com/example/${repoName}` : repoUrl}
                 </a>
               </div>
             </div>
@@ -343,26 +431,36 @@ export function ProjectGenesisClient() {
                 Project Breakdown
                 </CardTitle>
                 <CardDescription>
-                The project has been broken down into parts with suggested developers.
+                The project has been broken down into parts with assigned developers.
                 </CardDescription>
             </div>
-            <Button onClick={() => setCurrentView('breakdown')}>View & Assign</Button>
+             <Button variant="outline" onClick={() => { setCurrentView('setup'); setSetupStep('breakdown'); }}>View & Edit Assignments</Button>
           </CardHeader>
           <CardContent>
              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {analysisResult.projectBreakdown.slice(0,4).map((part) => (
+                {analysisResult.projectBreakdown.map((part) => (
                     <Card key={part.part} className="bg-secondary/50">
                     <CardHeader>
                         <CardTitle className="text-lg truncate">{part.part}</CardTitle>
                         <CardDescription className="truncate">{part.description}</CardDescription>
                     </CardHeader>
                     <CardFooter>
-                        <div className="flex items-center gap-2 text-sm">
-                            <Avatar className="w-6 h-6">
-                                <AvatarImage src={`https://placehold.co/100x100.png`} alt={part.suggestedDeveloper} data-ai-hint="person avatar small"/>
-                                <AvatarFallback>{part.suggestedDeveloper.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-                            </Avatar>
-                            <span className="font-medium text-muted-foreground">Suggested: <span className="text-foreground">{part.suggestedDeveloper}</span></span>
+                        <div className="flex items-center gap-2 text-sm flex-wrap">
+                            {(assignedDevelopers[part.part] || []).map(devName => (
+                                <TooltipProvider key={devName}>
+                                    <Tooltip>
+                                        <TooltipTrigger>
+                                            <Avatar className="w-8 h-8">
+                                                <AvatarImage src={`https://placehold.co/100x100.png`} alt={devName} data-ai-hint="person avatar small"/>
+                                                <AvatarFallback>{devName.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                            </Avatar>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>{devName}</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            ))}
                         </div>
                     </CardFooter>
                     </Card>
@@ -598,8 +696,6 @@ export function ProjectGenesisClient() {
             return renderSetupStep();
         case 'dashboard':
             return renderDashboardStep();
-        case 'breakdown':
-            return renderBreakdownStep();
         case 'upload':
         default:
             return renderUploadStep();
