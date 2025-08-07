@@ -1,3 +1,4 @@
+
 import { ProjectAnalysis, JiraTaskStatus, View, SetupStep } from '@/components/project-genesis-client';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LayoutDashboard, Github, Puzzle, Users, Ticket, Circle, CheckCircle2, XCircle, Clock, Newspaper, Star } from "lucide-react";
+import { LayoutDashboard, Github, Puzzle, Users, Ticket, Circle, CheckCircle2, XCircle, Clock, Newspaper, Star, PlusCircle } from "lucide-react";
 
 type DashboardViewProps = {
     analysisResult: ProjectAnalysis | null;
@@ -165,46 +166,11 @@ export function DashboardView({
                     <CardTitle className="font-headline flex items-center gap-2"><Ticket className="w-6 h-6"/>Jira Board</CardTitle>
                     <CardDescription>Tasks assigned to developers for this project.</CardDescription>
                 </CardHeader>
-                <CardContent>
-                <Accordion type="single" collapsible className="w-full">
-                    {analysisResult.team.map((developer, index) => {
-                      const jiraTasks = getJiraTasksForDeveloper(developer.name);
-                      return (
-                        <AccordionItem value={`item-${index}`} key={developer.name}>
-                            <AccordionTrigger>
-                            <div className="flex items-center gap-2">
-                                <Avatar className="w-6 h-6">
-                                    <AvatarImage src={`https://placehold.co/100x100.png`} alt={developer.name} data-ai-hint="person avatar small"/>
-                                    <AvatarFallback>{developer.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-                                </Avatar>
-                                <span className="font-medium">{developer.name}</span>
-                            </div>
-                            </AccordionTrigger>
-                            <AccordionContent>
-                            {jiraTasks.length > 0 ? (
-                                <div className="space-y-3 pl-6">
-                                    {jiraTasks.map((task, i) => {
-                                        const StatusIcon = statusIcons[task.status];
-                                        const iconColor = statusColors[task.status];
-                                        return (
-                                            <div key={i} className="flex items-start gap-3 p-3 bg-secondary/50 rounded-lg">
-                                                <StatusIcon className={`w-5 h-5 mt-1 text-white rounded-full p-0.5 ${iconColor} shrink-0`}/>
-                                                <div>
-                                                    <p className="font-medium text-sm">{task.ticket}: <span className="font-normal">{task.description}</span></p>
-                                                    <Badge variant="outline" className="mt-1">{task.status}</Badge>
-                                                </div>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            ) : (
-                                <p className="text-muted-foreground text-sm pl-6">No tasks assigned to this developer.</p>
-                            )}
-                            </AccordionContent>
-                        </AccordionItem>
-                      )
-                    })}
-                </Accordion>
+                <CardContent className="flex items-center justify-center h-48">
+                  <Button variant="outline">
+                    <PlusCircle className="w-4 h-4 mr-2" />
+                    Create Tickets
+                  </Button>
                 </CardContent>
             </Card>
         </div>
