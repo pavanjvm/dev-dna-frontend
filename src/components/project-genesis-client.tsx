@@ -54,11 +54,15 @@ import {
   ArrowLeft,
   UserPlus,
   Search,
-  PlusCircle
+  PlusCircle,
+  ChevronRight,
+  User,
+  Check,
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { ScrollArea, ScrollBar } from "./ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 
 type ProjectAnalysis = {
   analysis: {
@@ -82,14 +86,19 @@ type ProjectAnalysis = {
   }[];
 };
 
-type View = 'upload' | 'dashboard' | 'breakdown';
+type View = 'upload' | 'setup' | 'dashboard' | 'breakdown';
+type SetupStep = 'repository' | 'team' | 'assign';
 
 export function ProjectGenesisClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [analysisResult, setAnalysisResult] = useState<ProjectAnalysis | null>(null);
   const [currentView, setCurrentView] = useState<View>('upload');
+  const [setupStep, setSetupStep] = useState<SetupStep>('repository');
   const [searchQuery, setSearchQuery] = useState('');
+  const [repoOption, setRepoOption] = useState('create');
+  const [repoUrl, setRepoUrl] = useState('');
+  const [assignedDevelopers, setAssignedDevelopers] = useState<Record<string, string[]>>({});
 
   const { toast } = useToast();
 
@@ -148,8 +157,15 @@ export function ProjectGenesisClient() {
     };
 
     setAnalysisResult(result);
+    // Initialize assigned developers with suggestions
+    const initialAssignments: Record<string, string[]> = {};
+    result.projectBreakdown.forEach(part => {
+        initialAssignments[part.part] = [part.suggestedDeveloper];
+    });
+    setAssignedDevelopers(initialAssignments);
+
     setIsLoading(false);
-    setCurrentView('dashboard');
+    setCurrentView('setup');
   };
 
   const renderUploadStep = () => (
@@ -188,6 +204,117 @@ export function ProjectGenesisClient() {
       </CardFooter>
     </Card>
   );
+
+  const renderSetupStep = () => {
+    if (!analysisResult) return null;
+
+    const renderRepoStep = () => (
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Repository Setup</CardTitle>
+            <CardDescription>Create a new repository or link to an existing one.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RadioGroup value={repoOption} onValueChange={setRepoOption} className="grid grid-cols-2 gap-4">
+              <div>
+                <RadioGroupItem value="create" id="r1" className="peer sr-only" />
+                <Label htmlFor="r1" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
+                  <Github className="mb-3 h-6 w-6" />
+                  Create New
+                </Label>
+              </div>
+              <div>
+                <RadioGroupItem value="existing" id="r2" className="peer sr-only" />
+                <Label htmlFor="r2" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
+                  <UploadCloud className="mb-3 h-6 w-6" />
+                  Use Existing
+                </Label>
+              </div>
+            </RadioGroup>
+            {repoOption === 'existing' && (
+              <div className="mt-4">
+                <Label htmlFor="repo-url">Repository URL</Label>
+                <Input id="repo-url" placeholder="https://github.com/your/repo" value={repoUrl} onChange={(e) => setRepoUrl(e.target.value)} />
+              </div>
+            )}
+          </CardContent>
+          <CardFooter>
+            <Button onClick={() => setSetupStep('team')} className="ml-auto">
+                Next <ChevronRight className="w-4 h-4" />
+            </Button>
+          </CardFooter>
+        </Card>
+    );
+
+    const renderTeamStep = () => (
+        <Card className="w-full max-w-2xl">
+            <CardHeader>
+                <CardTitle>Review Your Team</CardTitle>
+                <CardDescription>Here is the team suggested by the analysis. You can assign them to project parts in the next step.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="space-y-4">
+                    {analysisResult.team.map(dev => (
+                        <div key={dev.name} className="flex items-center gap-4 p-3 bg-secondary/50 rounded-lg">
+                             <Avatar className="w-10 h-10">
+                                <AvatarImage src={`https://placehold.co/100x100.png`} alt={dev.name} data-ai-hint="person avatar"/>
+                                <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-grow">
+                                <p className="font-semibold">{dev.name}</p>
+                                <p className="text-sm text-muted-foreground">{dev.skills.join(', ')}</p>
+                            </div>
+                            <p className="text-sm text-muted-foreground flex-shrink-0 max-w-xs">{dev.reasoning}</p>
+                        </div>
+                    ))}
+                </div>
+            </CardContent>
+             <CardFooter>
+                <Button variant="outline" onClick={() => setSetupStep('repository')}>
+                    <ArrowLeft className="w-4 h-4" /> Back
+                </Button>
+                <Button onClick={() => setSetupStep('assign')} className="ml-auto">
+                    Next <ChevronRight className="w-4 h-4" />
+                </Button>
+            </CardFooter>
+        </Card>
+    );
+
+    const renderAssignStep = () => (
+        <Card className="w-full max-w-md">
+            <CardHeader>
+                <CardTitle>Assign Tasks</CardTitle>
+                <CardDescription>Do you want to assign initial feature suggestions to the team members?</CardDescription>
+            </CardHeader>
+            <CardContent className="flex justify-center items-center gap-4">
+                <Lightbulb className="w-16 h-16 text-primary" />
+                <p>This will create initial tasks based on the feature suggestions for each developer.</p>
+            </CardContent>
+            <CardFooter>
+                <Button variant="outline" onClick={() => setSetupStep('team')}>
+                    <ArrowLeft className="w-4 h-4" /> Back
+                </Button>
+                <div className="ml-auto flex gap-2">
+                    <Button variant="ghost" onClick={() => setCurrentView('dashboard')}>Skip</Button>
+                    <Button onClick={() => setCurrentView('dashboard')}>
+                        Yes, Assign Tasks <Check className="w-4 h-4" />
+                    </Button>
+                </div>
+            </CardFooter>
+        </Card>
+    );
+
+    switch(setupStep) {
+        case 'team':
+            return renderTeamStep();
+        case 'assign':
+            return renderAssignStep();
+        case 'repository':
+        default:
+            return renderRepoStep();
+    }
+  };
+
 
   const renderDashboardStep = () =>
     analysisResult && (
@@ -326,6 +453,20 @@ export function ProjectGenesisClient() {
         dev.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    const handleAddDeveloper = (part: string, devName: string) => {
+        setAssignedDevelopers(prev => ({
+            ...prev,
+            [part]: [...(prev[part] || []), devName]
+        }));
+    };
+
+    const handleRemoveDeveloper = (part: string, devName: string) => {
+        setAssignedDevelopers(prev => ({
+            ...prev,
+            [part]: prev[part].filter(d => d !== devName)
+        }));
+    };
+
     return (
         <div className="w-full animate-in fade-in-50">
             <div className="flex items-center gap-4 mb-8">
@@ -350,15 +491,34 @@ export function ProjectGenesisClient() {
                               <CardContent className="space-y-4">
                                   <div>
                                       <h4 className="text-sm font-semibold mb-2">Assigned Developers</h4>
-                                      <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
-                                          <div className="flex items-center gap-2">
-                                              <Avatar className="w-8 h-8">
-                                                  <AvatarImage src={`https://placehold.co/100x100.png`} alt={part.suggestedDeveloper} data-ai-hint="person avatar"/>
-                                                  <AvatarFallback>{part.suggestedDeveloper.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-                                              </Avatar>
-                                              <span className="font-medium">{part.suggestedDeveloper}</span>
-                                          </div>
-                                          <Button size="sm">Assign</Button>
+                                      <div className="space-y-2">
+                                          {(assignedDevelopers[part.part] || []).map(devName => (
+                                              <div key={devName} className="flex items-center justify-between p-2 bg-secondary/50 rounded-lg">
+                                                  <div className="flex items-center gap-2">
+                                                      <Avatar className="w-8 h-8">
+                                                          <AvatarImage src={`https://placehold.co/100x100.png`} alt={devName} data-ai-hint="person avatar"/>
+                                                          <AvatarFallback>{devName.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                                      </Avatar>
+                                                      <span className="font-medium text-sm">{devName}</span>
+                                                  </div>
+                                                  <Button size="sm" variant="ghost" onClick={() => handleRemoveDeveloper(part.part, devName)}>Remove</Button>
+                                              </div>
+                                          ))}
+                                          {part.suggestedDeveloper && !(assignedDevelopers[part.part] || []).includes(part.suggestedDeveloper) && (
+                                              <div className="flex items-center justify-between p-2 border-2 border-dashed rounded-lg">
+                                                  <div className="flex items-center gap-2">
+                                                      <Avatar className="w-8 h-8 opacity-70">
+                                                          <AvatarImage src={`https://placehold.co/100x100.png`} alt={part.suggestedDeveloper} data-ai-hint="person avatar"/>
+                                                          <AvatarFallback>{part.suggestedDeveloper.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                                      </Avatar>
+                                                      <div>
+                                                        <span className="font-medium text-sm">{part.suggestedDeveloper}</span>
+                                                        <p className="text-xs text-muted-foreground">Suggested</p>
+                                                      </div>
+                                                  </div>
+                                                  <Button size="sm" onClick={() => handleAddDeveloper(part.part, part.suggestedDeveloper)}>Assign</Button>
+                                              </div>
+                                          )}
                                       </div>
                                   </div>
                                   
@@ -383,10 +543,12 @@ export function ProjectGenesisClient() {
                                       </div>
                                       <ScrollArea className="h-48">
                                           <div className="space-y-1 p-2">
-                                          {filteredDevelopers.map(dev => (
+                                          {filteredDevelopers
+                                            .filter(dev => !(assignedDevelopers[part.part] || []).includes(dev.name))
+                                            .map(dev => (
                                               <Tooltip key={dev.name} delayDuration={300}>
                                                 <TooltipTrigger asChild>
-                                                  <div className="flex items-center justify-between p-2 rounded-md hover:bg-secondary cursor-pointer">
+                                                  <div className="flex items-center justify-between p-2 rounded-md hover:bg-secondary cursor-pointer" onClick={() => handleAddDeveloper(part.part, dev.name)}>
                                                       <div className="flex items-center gap-2">
                                                           <Avatar className="w-6 h-6">
                                                               <AvatarImage src={`https://placehold.co/100x100.png`} alt={dev.name} data-ai-hint="person avatar small"/>
@@ -409,7 +571,6 @@ export function ProjectGenesisClient() {
                                       </ScrollArea>
                                     </PopoverContent>
                                   </Popover>
-
                               </CardContent>
                           </Card>
                       ))}
@@ -433,6 +594,8 @@ export function ProjectGenesisClient() {
     }
 
     switch (currentView) {
+        case 'setup':
+            return renderSetupStep();
         case 'dashboard':
             return renderDashboardStep();
         case 'breakdown':
