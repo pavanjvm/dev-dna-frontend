@@ -167,6 +167,8 @@ export function ProjectGenesisClient() {
       { name: 'Alice Johnson', skills: ['React', 'Next.js', 'TypeScript'], reasoning: 'Experienced in frontend development with a strong focus on building scalable React applications.' },
       { name: 'Bob Williams', skills: ['Node.js', 'GraphQL', 'PostgreSQL'], reasoning: 'Skilled in backend services and database management, perfect for the API and data layers.' },
       { name: 'Charlie Brown', skills: ['React Native', 'Firebase', 'Mobile UI/UX'], reasoning: 'Has a background in mobile development, which will be crucial for the native app version.' },
+      { name: 'David Lee', skills: ['AWS', 'Docker', 'CI/CD'], reasoning: 'DevOps expert to ensure smooth deployment and scaling.' },
+      { name: 'Eve Davis', skills: ['UI/UX Design', 'Figma', 'CSS'], reasoning: 'Specializes in creating intuitive and beautiful user interfaces.' },
     ];
     setRecommendedDevs(devs);
     // Auto-select all recommended devs for the mock
@@ -219,6 +221,9 @@ export function ProjectGenesisClient() {
         'PROJ-3: Implement photo upload service - Assigned to Alice Johnson',
         'PROJ-4: Create API endpoint for social feed - Assigned to Bob Williams',
         'PROJ-5: Develop real-time chat feature - Assigned to Charlie Brown',
+        'PROJ-6: Configure CI/CD pipeline - Assigned to David Lee',
+        'PROJ-7: Design user profile page mockups - Assigned to Eve Davis',
+        'PROJ-8: Write unit tests for authentication - Assigned to Alice Johnson',
       ]
     };
     setJiraTasks(newJiraTasks);
@@ -228,6 +233,8 @@ export function ProjectGenesisClient() {
       { developer: 'Bob Williams', update: 'Finalized the database schema for user profiles and posts. Began setting up the initial Express server.', date: '2024-07-29' },
       { developer: 'Charlie Brown', update: 'Investigated options for the real-time chat feature. Decided on using Socket.IO and created a basic prototype.', date: '2024-07-29' },
       { developer: 'Alice Johnson', update: 'Implemented JWT-based authentication and tested endpoints.', date: '2024-07-30' },
+      { developer: 'David Lee', update: 'Set up initial GitHub Actions workflow for linting and testing.', date: '2024-07-30' },
+      { developer: 'Eve Davis', update: 'Created wireframes and high-fidelity mockups for the main feed and profile pages.', date: '2024-07-30' },
     ];
     setDailyUpdates(newDailyUpdates);
     
@@ -542,33 +549,24 @@ export function ProjectGenesisClient() {
 
         <div className="grid lg:grid-cols-3 gap-6">
           <Card className="lg:col-span-1">
-            <CardHeader>
+             <CardHeader>
               <CardTitle className="font-headline flex items-center gap-2"><Users className="w-6 h-6" />Project Team</CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-4">
-              {selectedDevs.map((dev) => (
-                <div key={dev.name} className="flex items-center gap-4">
-                  <Avatar>
-                    <AvatarImage
-                      src={`https://placehold.co/100x100.png`}
-                      alt={dev.name}
-                      data-ai-hint="person avatar"
-                    />
-                    <AvatarFallback>
-                      {dev.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <span className="font-medium">{dev.name}</span>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {dev.skills.map(skill => <Badge key={skill} variant="secondary">{skill}</Badge>)}
+            <CardContent>
+                <div className="flex items-center gap-4">
+                    <div className="flex -space-x-2 overflow-hidden">
+                        {performanceData.slice(0, 5).map((dev) => (
+                             <Avatar key={dev.name} className="inline-block border-2 border-background">
+                                <AvatarImage src={`https://placehold.co/100x100.png`} alt={dev.name} data-ai-hint="person avatar"/>
+                                <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                            </Avatar>
+                        ))}
                     </div>
-                  </div>
+                    <div className="text-sm">
+                        <p className="font-semibold">{selectedDevs.length} Developers</p>
+                        <p className="text-muted-foreground">Top contributors shown</p>
+                    </div>
                 </div>
-              ))}
             </CardContent>
           </Card>
           <Card className="lg:col-span-2">
@@ -735,5 +733,3 @@ export function ProjectGenesisClient() {
     </div>
   );
 }
-
-    
