@@ -58,6 +58,7 @@ import {
   ChevronRight,
   User,
   Check,
+  TrendingUp,
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { ScrollArea, ScrollBar } from "./ui/scroll-area";
@@ -83,6 +84,11 @@ type ProjectAnalysis = {
     skills: string[];
     reasoning: string;
     featureSuggestions: string[];
+  }[];
+  dailyUpdates: {
+    developerName: string;
+    update: string;
+    date: string;
   }[];
 };
 
@@ -154,6 +160,12 @@ export function ProjectGenesisClient() {
         { name: 'Charlie Brown', skills: ['React Native', 'Firebase', 'Mobile UI/UX'], reasoning: 'Has a background in mobile development, which will be crucial for the native app version.', featureSuggestions: ["Develop a native mobile app for iOS and Android.", "Integrate push notifications for new messages and interactions."] },
         { name: 'David Lee', skills: ['AWS', 'Docker', 'CI/CD'], reasoning: 'DevOps expert to ensure smooth deployment and scaling.', featureSuggestions: ["Set up a CI/CD pipeline for automated testing and deployment.", "Configure scalable cloud infrastructure on AWS."] },
         { name: 'Eve Davis', skills: ['UI/UX Design', 'Figma', 'CSS'], reasoning: 'Specializes in creating intuitive and beautiful user interfaces.', featureSuggestions: ["Create a complete design system and component library in Figma.", "Ensure the application is fully accessible (WCAG AA)."] },
+      ],
+      dailyUpdates: [
+        { developerName: 'Alice Johnson', update: 'Completed the basic layout for the user profile page.', date: '2024-07-31' },
+        { developerName: 'Bob Williams', update: 'Finalized the database schema for user profiles and posts.', date: '2024-07-31' },
+        { developerName: 'Charlie Brown', update: 'Started setting up the React Native environment.', date: '2024-07-31' },
+        { developerName: 'Alice Johnson', update: 'Implemented the authentication logic with Firebase.', date: '2024-07-30' },
       ],
     };
 
@@ -404,8 +416,20 @@ export function ProjectGenesisClient() {
   };
 
 
-  const renderDashboardStep = () =>
-    analysisResult && (
+  const renderDashboardStep = () => {
+    if (!analysisResult) return null;
+
+    const performanceData = analysisResult.team.map(dev => {
+        const assignedCount = Object.values(assignedDevelopers).flat().filter(d => d === dev.name).length;
+        const updateCount = analysisResult.dailyUpdates.filter(u => u.developerName === dev.name).length;
+        return {
+            name: dev.name.split(' ')[0],
+            score: (assignedCount * 5) + (updateCount * 2) 
+        };
+    }).sort((a, b) => b.score - a.score);
+
+
+    return (
       <div className="w-full max-w-7xl grid gap-8 animate-in fade-in-50">
         <Card>
           <CardHeader>
@@ -470,80 +494,127 @@ export function ProjectGenesisClient() {
         </Card>
 
         <div className="grid lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-1">
-             <CardHeader>
-              <CardTitle className="font-headline flex items-center gap-2"><Users className="w-6 h-6" />Project Team</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <div className="flex items-center gap-4">
-                    <div className="flex -space-x-2 overflow-hidden">
-                        {analysisResult.team.slice(0, 5).map((dev) => (
-                             <Avatar key={dev.name} className="inline-block border-2 border-background">
-                                <AvatarImage src={`https://placehold.co/100x100.png`} alt={dev.name} data-ai-hint="person avatar"/>
-                                <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-                            </Avatar>
-                        ))}
-                    </div>
-                    <div className="text-sm">
-                        <p className="font-semibold">{analysisResult.team.length} Developers</p>
-                        <p className="text-muted-foreground">Team members suggested</p>
-                    </div>
-                </div>
-                 <ul className="mt-4 space-y-2 text-sm">
-                  {analysisResult.team.slice(0,3).map(dev => (
-                    <li key={dev.name} className="flex items-start gap-2">
-                      <Avatar className="w-5 h-5 mt-1">
-                          <AvatarImage src={`https://placehold.co/100x100.png`} alt={dev.name} data-ai-hint="person avatar small"/>
-                          <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <span className="font-medium">{dev.name}</span>
-                        <p className="text-muted-foreground text-xs">{dev.skills.join(', ')}</p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-            </CardContent>
-          </Card>
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="font-headline flex items-center gap-2"><Lightbulb className="w-6 h-6"/>Feature Suggestions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Accordion type="single" collapsible className="w-full">
-                {analysisResult.team.map((developer, index) => (
-                  <AccordionItem value={`item-${index}`} key={developer.name}>
-                    <AccordionTrigger>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="w-6 h-6">
-                            <AvatarImage src={`https://placehold.co/100x100.png`} alt={developer.name} data-ai-hint="person avatar small"/>
-                            <AvatarFallback>{developer.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">{developer.name}</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      {developer.featureSuggestions.length > 0 ? (
-                        <ul className="space-y-3 pl-6">
-                            {developer.featureSuggestions.map((feature, i) => (
-                                <li key={i} className="flex items-start gap-3 p-3 bg-secondary/50 rounded-lg">
-                                    <Lightbulb className="w-5 h-5 mt-1 text-primary shrink-0"/>
-                                    <span className="text-sm">{feature}</span>
-                                </li>
+            <Card className="lg:col-span-1">
+                <CardHeader>
+                    <CardTitle className="font-headline flex items-center gap-2"><Users className="w-6 h-6" />Project Team</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex items-center gap-4">
+                        <div className="flex -space-x-2 overflow-hidden">
+                            {analysisResult.team.slice(0, 5).map((dev) => (
+                                <Avatar key={dev.name} className="inline-block border-2 border-background">
+                                    <AvatarImage src={`https://placehold.co/100x100.png`} alt={dev.name} data-ai-hint="person avatar"/>
+                                    <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                </Avatar>
                             ))}
-                        </ul>
-                      ) : (
-                        <p className="text-muted-foreground text-sm pl-6">No feature suggestions for this developer.</p>
-                      )}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </CardContent>
-          </Card>
+                        </div>
+                        <div className="text-sm">
+                            <p className="font-semibold">{analysisResult.team.length} Developers</p>
+                            <p className="text-muted-foreground">Team members suggested</p>
+                        </div>
+                    </div>
+                    <ul className="mt-4 space-y-2 text-sm">
+                    {analysisResult.team.slice(0,3).map(dev => (
+                        <li key={dev.name} className="flex items-start gap-2">
+                        <Avatar className="w-5 h-5 mt-1">
+                            <AvatarImage src={`https://placehold.co/100x100.png`} alt={dev.name} data-ai-hint="person avatar small"/>
+                            <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                            <span className="font-medium">{dev.name}</span>
+                            <p className="text-muted-foreground text-xs">{dev.skills.join(', ')}</p>
+                        </div>
+                        </li>
+                    ))}
+                    </ul>
+                </CardContent>
+            </Card>
+
+            <Card className="lg:col-span-2">
+                <CardHeader>
+                <CardTitle className="font-headline flex items-center gap-2"><Lightbulb className="w-6 h-6"/>Feature Suggestions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                <Accordion type="single" collapsible className="w-full">
+                    {analysisResult.team.map((developer, index) => (
+                    <AccordionItem value={`item-${index}`} key={developer.name}>
+                        <AccordionTrigger>
+                        <div className="flex items-center gap-2">
+                            <Avatar className="w-6 h-6">
+                                <AvatarImage src={`https://placehold.co/100x100.png`} alt={developer.name} data-ai-hint="person avatar small"/>
+                                <AvatarFallback>{developer.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                            </Avatar>
+                            <span className="font-medium">{developer.name}</span>
+                        </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                        {developer.featureSuggestions.length > 0 ? (
+                            <ul className="space-y-3 pl-6">
+                                {developer.featureSuggestions.map((feature, i) => (
+                                    <li key={i} className="flex items-start gap-3 p-3 bg-secondary/50 rounded-lg">
+                                        <Lightbulb className="w-5 h-5 mt-1 text-primary shrink-0"/>
+                                        <span className="text-sm">{feature}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="text-muted-foreground text-sm pl-6">No feature suggestions for this developer.</p>
+                        )}
+                        </AccordionContent>
+                    </AccordionItem>
+                    ))}
+                </Accordion>
+                </CardContent>
+            </Card>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-6">
+            <Card className="lg:col-span-2">
+                <CardHeader>
+                    <CardTitle className="font-headline flex items-center gap-2"><TrendingUp className="w-6 h-6" />Performance Metrics</CardTitle>
+                    <CardDescription>Contribution scores based on assignments and updates.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={performanceData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <RechartsTooltip cursor={{ fill: 'hsla(var(--accent) / 0.2)' }}/>
+                            <Legend />
+                            <Bar dataKey="score" fill="hsl(var(--primary))" name="Contribution Score" />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </CardContent>
+            </Card>
+            <Card className="lg:col-span-1">
+                <CardHeader>
+                    <CardTitle className="font-headline flex items-center gap-2"><Newspaper className="w-6 h-6" />Daily Updates</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <ScrollArea className="h-72">
+                        <div className="space-y-4">
+                            {analysisResult.dailyUpdates.map((update, index) => (
+                                <div key={index} className="flex items-start gap-3">
+                                    <Avatar className="w-8 h-8 mt-1">
+                                        <AvatarImage src={`https://placehold.co/100x100.png`} alt={update.developerName} data-ai-hint="person avatar small"/>
+                                        <AvatarFallback>{update.developerName.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                        <p className="text-sm font-medium">{update.developerName}</p>
+                                        <p className="text-sm text-muted-foreground">{update.update}</p>
+                                        <p className="text-xs text-muted-foreground/70 mt-1">{new Date(update.date).toLocaleDateString()}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </ScrollArea>
+                </CardContent>
+            </Card>
         </div>
       </div>
     );
+  }
     
   const renderBreakdownStep = () => {
     if (!analysisResult) return null;
