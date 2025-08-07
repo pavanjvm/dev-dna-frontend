@@ -1,7 +1,17 @@
 "use client";
 
-import { useState, useCallback, useMemo, ChangeEvent } from "react";
+import { useState, useCallback, useMemo, ChangeEvent, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -47,6 +57,7 @@ import {
   CheckCircle,
   Newspaper,
   Calendar,
+  Activity,
 } from "lucide-react";
 
 // Mock types that were previously imported from AI flows
@@ -70,6 +81,11 @@ type DailyUpdate = {
   update: string;
   date: string;
 };
+
+type PerformanceData = {
+  name: string;
+  contributionScore: number;
+}[];
 
 type Step = "UPLOAD" | "SETUP" | "TEAM" | "JIRA" | "DASHBOARD";
 type Developer = RecommendDevelopersOutput[0];
@@ -100,6 +116,8 @@ export function ProjectGenesisClient() {
     null
   );
   const [dailyUpdates, setDailyUpdates] = useState<DailyUpdate[]>([]);
+  const [performanceData, setPerformanceData] = useState<PerformanceData>([]);
+
 
   const { toast } = useToast();
 
@@ -157,12 +175,44 @@ export function ProjectGenesisClient() {
     setIsLoading(false);
   };
 
+  const calculatePerformanceMetrics = (
+    developers: Developer[],
+    tasks: CreateJiraTasksOutput,
+    updates: DailyUpdate[]
+  ): PerformanceData => {
+    const scores: { [key: string]: number } = {};
+  
+    developers.forEach(dev => {
+      scores[dev.name] = 0;
+    });
+  
+    // 2 points per task
+    tasks.jiraTaskDetails.forEach(taskString => {
+      const { assignee } = parseJiraTask(taskString);
+      if (assignee && scores[assignee] !== undefined) {
+        scores[assignee] += 2;
+      }
+    });
+  
+    // 1 point per update
+    updates.forEach(update => {
+      if (scores[update.developer] !== undefined) {
+        scores[update.developer] += 1;
+      }
+    });
+  
+    return Object.entries(scores)
+      .map(([name, score]) => ({ name, contributionScore: score }))
+      .sort((a, b) => b.contributionScore - a.contributionScore);
+  };
+
   const handleCreateJira = async () => {
     if (!analysis || selectedDevs.length === 0) return;
     setIsLoading(true);
     setLoadingMessage("Creating Jira board and assigning tasks...");
     await new Promise(resolve => setTimeout(resolve, 1500));
-    setJiraTasks({
+    
+    const newJiraTasks = {
       jiraTaskDetails: [
         'PROJ-1: Setup user authentication flow - Assigned to Alice Johnson',
         'PROJ-2: Design database schema for user profiles - Assigned to Bob Williams',
@@ -170,12 +220,20 @@ export function ProjectGenesisClient() {
         'PROJ-4: Create API endpoint for social feed - Assigned to Bob Williams',
         'PROJ-5: Develop real-time chat feature - Assigned to Charlie Brown',
       ]
-    });
-    setDailyUpdates([
+    };
+    setJiraTasks(newJiraTasks);
+
+    const newDailyUpdates = [
       { developer: 'Alice Johnson', update: 'Completed the basic layout for the user profile page and started working on the authentication logic.', date: '2024-07-29' },
       { developer: 'Bob Williams', update: 'Finalized the database schema for user profiles and posts. Began setting up the initial Express server.', date: '2024-07-29' },
       { developer: 'Charlie Brown', update: 'Investigated options for the real-time chat feature. Decided on using Socket.IO and created a basic prototype.', date: '2024-07-29' },
-    ]);
+      { developer: 'Alice Johnson', update: 'Implemented JWT-based authentication and tested endpoints.', date: '2024-07-30' },
+    ];
+    setDailyUpdates(newDailyUpdates);
+    
+    const performance = calculatePerformanceMetrics(selectedDevs, newJiraTasks, newDailyUpdates);
+    setPerformanceData(performance);
+    
     setStep("DASHBOARD");
     setIsLoading(false);
   };
@@ -546,6 +604,41 @@ export function ProjectGenesisClient() {
             </CardContent>
           </Card>
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-headline flex items-center gap-2"><Activity className="w-6 h-6"/>Performance Metrics</CardTitle>
+            <CardDescription>Developer contribution scores based on tasks and updates.</CardDescription>
+          </CardHeader>
+          <CardContent>
+             <div className="w-full h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                    data={performanceData}
+                    margin={{
+                        top: 5,
+                        right: 30,
+                        left: 20,
+                        bottom: 5,
+                    }}
+                    >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip
+                        contentStyle={{
+                            backgroundColor: 'hsl(var(--background))',
+                            borderColor: 'hsl(var(--border))'
+                        }}
+                    />
+                    <Legend />
+                    <Bar dataKey="contributionScore" fill="hsl(var(--primary))" name="Contribution Score" />
+                    </BarChart>
+                </ResponsiveContainer>
+             </div>
+          </CardContent>
+        </Card>
+
          <Card>
             <CardHeader>
               <CardTitle className="font-headline flex items-center gap-2"><Newspaper className="w-6 h-6"/>Daily Updates</CardTitle>
@@ -642,3 +735,5 @@ export function ProjectGenesisClient() {
     </div>
   );
 }
+
+    
