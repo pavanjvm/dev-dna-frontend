@@ -43,9 +43,10 @@ import {
   Calendar,
   Activity,
   Newspaper,
+  Lightbulb,
 } from "lucide-react";
 
-// Mock types based on the new consolidated JSON structure
+// Updated project analysis type
 type ProjectAnalysis = {
   analysis: {
     summary: string;
@@ -60,31 +61,15 @@ type ProjectAnalysis = {
     skills: string[];
     reasoning: string;
   }[];
-  tasks: {
-    task: string;
-    assignee: string | null;
-  }[];
-  dailyUpdates: {
-    developer: string;
-    update: string;
-    date: string;
-  }[];
+  featureSuggestions: string[];
 };
 
 type Developer = ProjectAnalysis["team"][0];
-type DailyUpdate = ProjectAnalysis["dailyUpdates"][0];
-type Task = ProjectAnalysis["tasks"][0];
-
-type PerformanceData = {
-  name: string;
-  contributionScore: number;
-}[];
 
 export function ProjectGenesisClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [analysisResult, setAnalysisResult] = useState<ProjectAnalysis | null>(null);
-  const [performanceData, setPerformanceData] = useState<PerformanceData>([]);
 
   const { toast } = useToast();
 
@@ -104,36 +89,6 @@ export function ProjectGenesisClient() {
     }
   };
 
-  const calculatePerformanceMetrics = (
-    developers: Developer[],
-    tasks: Task[],
-    updates: DailyUpdate[]
-  ): PerformanceData => {
-    const scores: { [key: string]: number } = {};
-
-    developers.forEach(dev => {
-      scores[dev.name] = 0;
-    });
-
-    // 2 points per task
-    tasks.forEach(task => {
-      if (task.assignee && scores[task.assignee] !== undefined) {
-        scores[task.assignee] += 2;
-      }
-    });
-
-    // 1 point per update
-    updates.forEach(update => {
-      if (scores[update.developer] !== undefined) {
-        scores[update.developer] += 1;
-      }
-    });
-
-    return Object.entries(scores)
-      .map(([name, score]) => ({ name, contributionScore: score }))
-      .sort((a, b) => b.contributionScore - a.contributionScore);
-  };
-
   const handleAnalyze = async () => {
     if (!file) {
       toast({
@@ -149,7 +104,7 @@ export function ProjectGenesisClient() {
     // Mock AI call
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    // Mock response based on the defined JSON structure
+    // Mock response based on the updated JSON structure
     const result: ProjectAnalysis = {
       analysis: {
         summary: "The project is a new social media platform for pet owners, allowing them to share photos, connect with others, and find pet-friendly locations.",
@@ -166,30 +121,17 @@ export function ProjectGenesisClient() {
         { name: 'David Lee', skills: ['AWS', 'Docker', 'CI/CD'], reasoning: 'DevOps expert to ensure smooth deployment and scaling.' },
         { name: 'Eve Davis', skills: ['UI/UX Design', 'Figma', 'CSS'], reasoning: 'Specializes in creating intuitive and beautiful user interfaces.' },
       ],
-      tasks: [
-        { task: 'PROJ-1: Setup user authentication flow', assignee: 'Alice Johnson' },
-        { task: 'PROJ-2: Design database schema for user profiles', assignee: 'Bob Williams' },
-        { task: 'PROJ-3: Implement photo upload service', assignee: 'Alice Johnson' },
-        { task: 'PROJ-4: Create API endpoint for social feed', assignee: 'Bob Williams' },
-        { task: 'PROJ-5: Develop real-time chat feature', assignee: 'Charlie Brown' },
-        { task: 'PROJ-6: Configure CI/CD pipeline', assignee: 'David Lee' },
-        { task: 'PROJ-7: Design user profile page mockups', assignee: 'Eve Davis' },
-        { task: 'PROJ-8: Write unit tests for authentication', assignee: 'Alice Johnson' },
+      featureSuggestions: [
+        "User authentication and profile management.",
+        "A dynamic social feed for sharing pet photos.",
+        "Real-time chat functionality between users.",
+        "Map integration to display pet-friendly locations.",
+        "A system for users to review and rate locations.",
+        "Admin panel for content moderation.",
       ],
-      dailyUpdates: [
-        { developer: 'Alice Johnson', update: 'Completed the basic layout for the user profile page and started working on the authentication logic.', date: '2024-07-31' },
-        { developer: 'Bob Williams', update: 'Finalized the database schema for user profiles and posts. Began setting up the initial Express server.', date: '2024-07-31' },
-        { developer: 'Charlie Brown', update: 'Investigated options for the real-time chat feature. Decided on using Socket.IO and created a basic prototype.', date: '2024-07-31' },
-        { developer: 'Alice Johnson', update: 'Implemented JWT-based authentication and tested endpoints.', date: '2024-08-01' },
-        { developer: 'David Lee', update: 'Set up initial GitHub Actions workflow for linting and testing.', date: '2024-08-01' },
-        { developer: 'Eve Davis', update: 'Created wireframes and high-fidelity mockups for the main feed and profile pages.', date: '2024-08-01' },
-      ]
     };
 
     setAnalysisResult(result);
-    const performance = calculatePerformanceMetrics(result.team, result.tasks, result.dailyUpdates);
-    setPerformanceData(performance);
-    
     setIsLoading(false);
   };
 
@@ -257,7 +199,7 @@ export function ProjectGenesisClient() {
             <CardContent>
                 <div className="flex items-center gap-4">
                     <div className="flex -space-x-2 overflow-hidden">
-                        {performanceData.slice(0, 5).map((dev) => (
+                        {analysisResult.team.slice(0, 5).map((dev) => (
                              <Avatar key={dev.name} className="inline-block border-2 border-background">
                                 <AvatarImage src={`https://placehold.co/100x100.png`} alt={dev.name} data-ai-hint="person avatar"/>
                                 <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
@@ -266,119 +208,47 @@ export function ProjectGenesisClient() {
                     </div>
                     <div className="text-sm">
                         <p className="font-semibold">{analysisResult.team.length} Developers</p>
-                        <p className="text-muted-foreground">Top contributors shown</p>
+                        <p className="text-muted-foreground">Team members suggested</p>
                     </div>
                 </div>
+                 <ul className="mt-4 space-y-2 text-sm">
+                  {analysisResult.team.slice(0,3).map(dev => (
+                    <li key={dev.name} className="flex items-start gap-2">
+                      <Avatar className="w-5 h-5 mt-1">
+                          <AvatarImage src={`https://placehold.co/100x100.png`} alt={dev.name} data-ai-hint="person avatar small"/>
+                          <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <span className="font-medium">{dev.name}</span>
+                        <p className="text-muted-foreground text-xs">{dev.skills.join(', ')}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
             </CardContent>
           </Card>
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle className="font-headline flex items-center gap-2"><FileText className="w-6 h-6"/>Task Assignments</CardTitle>
+              <CardTitle className="font-headline flex items-center gap-2"><Lightbulb className="w-6 h-6"/>Feature Suggestions</CardTitle>
             </CardHeader>
             <CardContent>
-              {analysisResult.tasks.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Task</TableHead>
-                      <TableHead>Assigned To</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {analysisResult.tasks.map((task, i) => {
-                      return (
-                        <TableRow key={i}>
-                          <TableCell className="font-medium">{task.task}</TableCell>
-                          <TableCell>
-                            {task.assignee || (
-                              <span className="text-muted-foreground">
-                                Unassigned
-                              </span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+              {analysisResult.featureSuggestions.length > 0 ? (
+                <ul className="space-y-3">
+                    {analysisResult.featureSuggestions.map((feature, i) => (
+                        <li key={i} className="flex items-start gap-3 p-3 bg-secondary/50 rounded-lg">
+                            <Lightbulb className="w-5 h-5 mt-1 text-primary shrink-0"/>
+                            <span className="text-sm">{feature}</span>
+                        </li>
+                    ))}
+                </ul>
               ) : (
                 <div className="text-center text-muted-foreground py-8">
-                  <p>No tasks have been assigned yet.</p>
+                  <p>No feature suggestions available.</p>
                 </div>
               )}
             </CardContent>
           </Card>
         </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-headline flex items-center gap-2"><Activity className="w-6 h-6"/>Performance Metrics</CardTitle>
-            <CardDescription>Developer contribution scores based on tasks and updates.</CardDescription>
-          </CardHeader>
-          <CardContent>
-             {performanceData.length > 0 && performanceData.some(p => p.contributionScore > 0) ? (
-              <div className="w-full h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                      data={performanceData}
-                      margin={{
-                          top: 5,
-                          right: 30,
-                          left: 20,
-                          bottom: 5,
-                      }}
-                      >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip
-                          contentStyle={{
-                              backgroundColor: 'hsl(var(--background))',
-                              borderColor: 'hsl(var(--border))'
-                          }}
-                      />
-                      <Legend />
-                      <Bar dataKey="contributionScore" fill="hsl(var(--primary))" name="Contribution Score" />
-                      </BarChart>
-                  </ResponsiveContainer>
-              </div>
-             ) : (
-              <div className="text-center text-muted-foreground py-8">
-                <p>No performance data available yet.</p>
-              </div>
-             )}
-          </CardContent>
-        </Card>
-
-         <Card>
-            <CardHeader>
-              <CardTitle className="font-headline flex items-center gap-2"><Newspaper className="w-6 h-6"/>Daily Updates</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {analysisResult.dailyUpdates.length > 0 ? analysisResult.dailyUpdates.map((update, i) => (
-                <div key={i} className="flex gap-4">
-                    <Avatar>
-                        <AvatarImage src={`https://placehold.co/100x100.png`} alt={update.developer} data-ai-hint="person icon"/>
-                        <AvatarFallback>{update.developer.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-grow">
-                        <div className="flex items-center justify-between">
-                            <p className="font-semibold">{update.developer}</p>
-                            <div className="text-xs text-muted-foreground flex items-center gap-1">
-                                <Calendar className="w-3 h-3"/>
-                                {update.date}
-                            </div>
-                        </div>
-                        <p className="text-muted-foreground mt-1">{update.update}</p>
-                    </div>
-                </div>
-              )) : (
-                <div className="text-center text-muted-foreground py-8">
-                  <p>No daily updates have been posted.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
       </div>
     );
 
