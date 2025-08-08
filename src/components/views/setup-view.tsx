@@ -93,7 +93,7 @@ export function SetupView({
     const renderBreakdownSetupStep = () => {
         if (!analysisResult) return null;
         const filteredDevelopers = analysisResult.team.filter(dev => 
-            dev.github_username.toLowerCase().includes(searchQuery.toLowerCase())
+            dev && dev.github_username && dev.github_username.toLowerCase().includes(searchQuery.toLowerCase())
         );
 
         const handleAddDeveloper = (part: string, devName: string) => {
