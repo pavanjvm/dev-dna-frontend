@@ -300,5 +300,3 @@ export function DashboardView({
       </div>
     );
 }
-
-    
