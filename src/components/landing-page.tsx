@@ -28,7 +28,7 @@ export function LandingPage() {
         </p>
         <Link href="/project" passHref>
           <Button size="lg" className="mt-8">
-            Enter Application <ArrowRight />
+            Get Started <ArrowRight />
           </Button>
         </Link>
       </div>
