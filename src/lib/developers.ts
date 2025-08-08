@@ -196,6 +196,29 @@ export type Developer = {
         "infrastructure": 35,
         "documentation": 10
       }
+    },
+    {
+      "github_username": "Guhanandan",
+      "monthly_commits": 50,
+      "average_commits_per_day": 2,
+      "pull_request_approval_rate": "85%",
+      "pull_request_reviews": 15,
+      "languages": [ "Java", "Spring", "SQL", "JavaScript", "React" ],
+      "skills_domains": [
+        "Backend",
+        "API Development",
+        "Microservices",
+        "State Management",
+        "Database"
+      ],
+      "strengths": "Strong backend developer with expertise in Java and Spring Boot. Proficient in building robust and scalable microservices. Good understanding of database design and state management.",
+      "weakness": "Could improve on frontend styling and complex UI interactions. Limited experience with DevOps and cloud infrastructure.",
+      "type_of_work_in_percentage": {
+        "features": 60,
+        "bugs": 25,
+        "infrastructure": 5,
+        "documentation": 10
+      }
     }
   ];
   

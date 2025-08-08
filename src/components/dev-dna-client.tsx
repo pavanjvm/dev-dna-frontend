@@ -10,6 +10,7 @@ import { UploadView } from "@/components/views/upload-view";
 import { SetupView } from "@/components/views/setup-view";
 import { DashboardView } from "@/components/views/dashboard-view";
 import { Topbar } from "@/components/topbar";
+import { developers } from "@/lib/developers";
 
 export type JiraTaskStatus = 'To Do' | 'In Progress' | 'Done' | 'Blocked';
 
@@ -187,15 +188,30 @@ export function DevDnaClient() {
       }));
 
       const teamMap = new Map<string, { name: string, skills: string[], reasoning: string }>();
-        projectBreakdown.forEach(part => {
-        if (!teamMap.has(part.suggestedDeveloper)) {
-            teamMap.set(part.suggestedDeveloper, { name: part.suggestedDeveloper, skills: [], reasoning: '' });
-        }
-        teamMap.get(part.suggestedDeveloper)!.skills.push(part.part);
-        teamMap.get(part.suggestedDeveloper)!.reasoning = part.suggestionReasoning;
-      });
+      
+      // Get all unique developer names from the breakdown
+      const suggestedDevNames = new Set(projectBreakdown.map(p => p.suggestedDeveloper));
 
-      const team = Array.from(teamMap.values());
+      // Create a team from the master developer list who are suggested in the API response
+      const team = developers
+        .filter(dev => suggestedDevNames.has(dev.github_username))
+        .map(dev => ({
+          name: dev.github_username,
+          skills: dev.skills_domains,
+          reasoning: projectBreakdown.find(p => p.suggestedDeveloper === dev.github_username)?.suggestionReasoning || ''
+        }));
+
+      // Add any suggested developers from API that are NOT in the master list
+      suggestedDevNames.forEach(name => {
+        if (!team.some(t => t.name === name)) {
+          const breakdownInfo = projectBreakdown.find(p => p.suggestedDeveloper === name);
+          team.push({
+            name: name,
+            skills: breakdownInfo ? [breakdownInfo.part] : [],
+            reasoning: breakdownInfo?.suggestionReasoning || 'Suggested by AI analysis'
+          });
+        }
+      });
 
 
       const result: ProjectAnalysis = {
