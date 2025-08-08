@@ -18,6 +18,12 @@ export type JiraTask = {
     status: JiraTaskStatus;
 };
 
+export type DailyUpdate = {
+    developerName: string;
+    update: string;
+    date: string;
+};
+
 export type ProjectAnalysis = {
   analysis: {
     summary: string;
@@ -39,11 +45,7 @@ export type ProjectAnalysis = {
     skills: string[];
     reasoning: string;
   }[];
-  dailyUpdates: {
-    developerName: string;
-    update: string;
-    date: string;
-  }[];
+  dailyUpdates: DailyUpdate[];
 };
 
 type ApiAnalysisResponse = {
@@ -107,6 +109,30 @@ export function ProjectGenesisClient() {
             sessionStorage.removeItem('projectAnalysis');
         }
     }
+
+    const handleDailyUpdates = (event: Event) => {
+      const customEvent = event as CustomEvent<DailyUpdate[]>;
+      setAnalysisResult(prev => {
+        if (!prev) return null;
+        const newUpdates = [...prev.dailyUpdates];
+        customEvent.detail.forEach(newUpdate => {
+          // Avoid adding duplicate updates
+          if (!newUpdates.some(existing => existing.developerName === newUpdate.developerName && existing.date === newUpdate.date && existing.update === newUpdate.update)) {
+            newUpdates.push(newUpdate);
+          }
+        });
+        const updatedAnalysis = { ...prev, dailyUpdates: newUpdates };
+        sessionStorage.setItem('projectAnalysis', JSON.stringify(updatedAnalysis));
+        return updatedAnalysis;
+      });
+    };
+
+    window.addEventListener('dailyUpdatesReceived', handleDailyUpdates);
+
+    return () => {
+        window.removeEventListener('dailyUpdatesReceived', handleDailyUpdates);
+    };
+
   }, []);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {

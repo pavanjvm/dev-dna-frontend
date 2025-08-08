@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -14,12 +15,32 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, Send, Bot, User, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DailyUpdate } from "@/components/project-genesis-client";
 
 type Message = {
   id: string;
   text: string;
   sender: "user" | "bot";
 };
+
+const parseDailyUpdates = (responseText: string, timestamp: string): DailyUpdate[] => {
+    const updates: DailyUpdate[] = [];
+    const dateMatch = responseText.match(/On (.*?20\d{2})/);
+    const date = dateMatch ? new Date(dateMatch[1]).toISOString().split('T')[0] : new Date(timestamp).toISOString().split('T')[0];
+
+    const sections = responseText.split(/\d+\.\s+\*\*/).slice(1);
+
+    sections.forEach(section => {
+        const nameMatch = section.match(/(.*?)\*\*:/);
+        if (nameMatch) {
+            const developerName = nameMatch[1].trim();
+            const update = section.replace(/(.*?)\*\*:/, '').trim();
+            updates.push({ developerName, update, date });
+        }
+    });
+
+    return updates;
+}
 
 export function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -66,6 +87,15 @@ export function Chatbot() {
       }
 
       const result = await response.json();
+
+      if (result.response && result.response.includes("daily updates")) {
+          const dailyUpdates = parseDailyUpdates(result.response, result.timestamp);
+          if (dailyUpdates.length > 0) {
+              const event = new CustomEvent('dailyUpdatesReceived', { detail: dailyUpdates });
+              window.dispatchEvent(event);
+          }
+      }
+
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: result.response,
@@ -157,7 +187,7 @@ export function Chatbot() {
         <form onSubmit={handleSubmit} className="flex gap-2 border-t pt-4">
           <Input
             value={input}
-            onChange={(e) => setInput(e.targe.value)}
+            onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
             disabled={isLoading}
           />
