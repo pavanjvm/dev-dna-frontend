@@ -32,17 +32,20 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
     );
 };
 
-export default function DeveloperProfilePage({ params: { username } }: PageParams) {
+export default function DeveloperProfilePage({ params }: PageParams) {
+    const { username } = params;
     const [developer, setDeveloper] = useState<Developer | null>(null);
     const [activityScore, setActivityScore] = useState(0);
 
     useEffect(() => {
-        const devData = getDeveloperByUsername(username);
-        if (devData) {
-            setDeveloper(devData);
-            // Simple activity score calculation
-            const score = Math.min(100, Math.round((devData.monthly_commits / 50) * 60 + (devData.pull_request_reviews / 10) * 20 + (parseFloat(devData.pull_request_approval_rate) / 100) * 20));
-            setActivityScore(score);
+        if (username) {
+            const devData = getDeveloperByUsername(username);
+            if (devData) {
+                setDeveloper(devData);
+                // Simple activity score calculation
+                const score = Math.min(100, Math.round((devData.monthly_commits / 50) * 60 + (devData.pull_request_reviews / 10) * 20 + (parseFloat(devData.pull_request_approval_rate) / 100) * 20));
+                setActivityScore(score);
+            }
         }
     }, [username]);
 
