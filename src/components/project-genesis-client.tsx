@@ -123,84 +123,46 @@ export function ProjectGenesisClient() {
 
     setIsLoading(true);
 
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    const formData = new FormData();
+    formData.append("pdf", file);
 
-    const result: ProjectAnalysis = {
-      analysis: {
-        summary: "The project is a new social media platform for pet owners, allowing them to share photos, connect with others, and find pet-friendly locations.",
-        keyAspects: "User profiles, photo uploads, social feed, real-time chat, and a map integration for locations."
-      },
-      repository: {
-        name: "project-genesis-app",
-        url: "https://github.com/example/project-genesis-app"
-      },
-      projectBreakdown: [
-        { 
-          part: 'Frontend Development', 
-          description: 'Building the user interface and user experience.', 
-          suggestedDeveloper: 'Alice Johnson',
-          suggestionReasoning: 'Alice has strong experience in React and Next.js, making her ideal for the frontend work.',
-          tickets: [
-            { ticket: 'GEN-101', description: 'Implement user authentication and profile pages.', status: 'Done' },
-            { ticket: 'GEN-102', description: 'Develop a responsive and dynamic social feed.', status: 'In Progress' },
-          ],
-        },
-        { 
-          part: 'Backend API', 
-          description: 'Developing the server-side logic and data management.', 
-          suggestedDeveloper: 'Bob Williams',
-          suggestionReasoning: 'Bob\'s expertise in Node.js and databases is a perfect fit for building a robust API.',
-          tickets: [
-            { ticket: 'GEN-201', description: 'Design and build the database schema for users and posts.', status: 'Done' },
-            { ticket: 'GEN-202', description: 'Create a GraphQL API for real-time chat functionality.', status: 'To Do' },
-          ]
-        },
-        { 
-          part: 'Mobile App', 
-          description: 'Creating the native mobile application for iOS and Android.', 
-          suggestedDeveloper: 'Charlie Brown',
-          suggestionReasoning: 'Charlie\'s background in mobile development is crucial for the native app version.',
-          tickets: [
-            { ticket: 'GEN-301', description: 'Develop a native mobile app for iOS and Android.', status: 'Blocked' },
-            { ticket: 'GEN-302', description: 'Integrate push notifications for new messages and interactions.', status: 'To Do' },
-          ]
-        },
-        { 
-          part: 'Deployment & Infrastructure', 
-          description: 'Managing cloud infrastructure and CI/CD pipelines.', 
-          suggestedDeveloper: 'David Lee',
-          suggestionReasoning: 'David is a DevOps expert who can ensure smooth deployment and scaling.',
-          tickets: [
-             { ticket: 'GEN-401', description: 'Set up a CI/CD pipeline for automated testing and deployment.', status: 'In Progress' },
-          ]
-        },
-      ],
-      team: [
-        { name: 'Alice Johnson', skills: ['React', 'Next.js', 'TypeScript'], reasoning: 'Experienced in frontend development with a strong focus on building scalable React applications.' },
-        { name: 'Bob Williams', skills: ['Node.js', 'GraphQL', 'PostgreSQL'], reasoning: 'Skilled in backend services and database management, perfect for the API and data layers.' },
-        { name: 'Charlie Brown', skills: ['React Native', 'Firebase', 'Mobile UI/UX'], reasoning: 'Has a background in mobile development, which will be crucial for the native app version.' },
-        { name: 'David Lee', skills: ['AWS', 'Docker', 'CI/CD'], reasoning: 'DevOps expert to ensure smooth deployment and scaling.' },
-        { name: 'Eve Davis', skills: ['UI/UX Design', 'Figma', 'CSS'], reasoning: 'Specializes in creating intuitive and beautiful user interfaces.' },
-      ],
-      dailyUpdates: [],
-    };
-    
     try {
-        sessionStorage.setItem('projectAnalysis', JSON.stringify(result));
+      const response = await fetch("http://localhost:3000/analyse", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result: ProjectAnalysis = await response.json();
+      
+      try {
+          sessionStorage.setItem('projectAnalysis', JSON.stringify(result));
+      } catch (error) {
+          console.error("Failed to save analysis to session storage", error);
+      }
+      setAnalysisResult(result);
+      setRepoName(result.repository.name);
+
+      const initialAssignments: Record<string, string[]> = {};
+      result.projectBreakdown.forEach(part => {
+          initialAssignments[part.part] = [part.suggestedDeveloper];
+      });
+      setAssignedDevelopers(initialAssignments);
+      setCurrentView('setup');
+
     } catch (error) {
-        console.error("Failed to save analysis to session storage", error);
+      console.error("Analysis failed:", error);
+      toast({
+        variant: "destructive",
+        title: "Analysis Failed",
+        description: "Could not analyze the project. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
     }
-    setAnalysisResult(result);
-    setRepoName(result.repository.name);
-
-    const initialAssignments: Record<string, string[]> = {};
-    result.projectBreakdown.forEach(part => {
-        initialAssignments[part.part] = [part.suggestedDeveloper];
-    });
-    setAssignedDevelopers(initialAssignments);
-
-    setIsLoading(false);
-    setCurrentView('setup');
   };
   
   const renderContent = () => {
