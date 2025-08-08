@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, Send, Bot, User, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DailyUpdate } from "@/components/project-genesis-client";
+import { useToast } from "@/hooks/use-toast";
 
 type Message = {
   id: string;
@@ -48,6 +49,7 @@ export function Chatbot() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (messages.length) {
@@ -74,7 +76,7 @@ export function Chatbot() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/query", {
+      const response = await fetch("http://localhost:3001/query", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -83,7 +85,17 @@ export function Chatbot() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to get response from bot.");
+        const errorData = await response.text();
+        let errorMessage = "Failed to get response from bot.";
+        try {
+            // Try to parse as JSON, backend might send structured error
+            const parsedError = JSON.parse(errorData);
+            errorMessage = parsedError.error || parsedError.message || errorData;
+        } catch (e) {
+            // If not JSON, use the raw text
+            errorMessage = errorData;
+        }
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
@@ -104,9 +116,15 @@ export function Chatbot() {
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
       console.error(error);
+      const errorMessageText = error instanceof Error ? error.message : "Sorry, something went wrong.";
+       toast({
+        variant: "destructive",
+        title: "Chatbot Error",
+        description: errorMessageText,
+      });
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: "Sorry, something went wrong. Please try again.",
+        text: `Error: ${errorMessageText}`,
         sender: "bot",
       };
       setMessages((prev) => [...prev, errorMessage]);
