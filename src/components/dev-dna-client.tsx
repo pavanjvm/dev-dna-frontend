@@ -365,17 +365,6 @@ export function DevDnaClient() {
     <div>
       {currentView === 'dashboard' && analysisResult && <Topbar projectTitle={analysisResult.repository.name} />}
        <div className="container mx-auto p-4 md:p-8">
-         {currentView !== 'dashboard' && (
-          <div className="text-center mb-8 absolute top-10 left-1/2 -translate-x-1/2 text-white">
-            <h1 className="font-headline text-5xl font-bold tracking-tighter">
-              Dev DNA
-            </h1>
-            <p className="text-white/80 text-lg">
-              Intelligently kickstart your software projects.
-            </p>
-          </div>
-        )}
-        
         {renderContent()}
       </div>
     </div>
