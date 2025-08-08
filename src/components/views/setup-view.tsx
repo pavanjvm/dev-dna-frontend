@@ -4,13 +4,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Github, UploadCloud, ChevronRight, Check, PlusCircle, Search, UserPlus, ArrowLeft } from 'lucide-react';
+import { Github, UploadCloud, ChevronRight, Check, PlusCircle, Search, UserPlus, ArrowLeft, Info } from 'lucide-react';
 import { ProjectAnalysis, SetupStep } from '@/components/dev-dna-client';
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 
 type SetupViewProps = {
@@ -131,18 +132,30 @@ export function SetupView({
                                                 {(assignedDevelopers[part.part] || []).map(devName => {
                                                     const isSuggested = devName === part.suggestedDeveloper;
                                                     return (
-                                                        <div key={devName} className="flex items-center justify-between p-2 bg-background/50 rounded-lg">
-                                                            <div className="flex items-center gap-2">
-                                                                <Avatar className="w-8 h-8">
-                                                                    <AvatarImage src={`https://placehold.co/100x100.png`} alt={devName} data-ai-hint="person avatar"/>
-                                                                    <AvatarFallback>{devName.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-                                                                </Avatar>
-                                                                <div>
-                                                                    <span className="font-medium text-sm">{devName} {isSuggested && <Badge variant="secondary" className="ml-1">Auto-assigned</Badge>}</span>
-                                                                    {isSuggested && <p className="text-xs text-muted-foreground italic">"{part.suggestionReasoning}"</p>}
+                                                        <div key={devName} className="p-2 bg-background/50 rounded-lg">
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="flex items-center gap-2">
+                                                                    <Avatar className="w-8 h-8">
+                                                                        <AvatarImage src={`https://placehold.co/100x100.png`} alt={devName} data-ai-hint="person avatar"/>
+                                                                        <AvatarFallback>{devName.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                                                    </Avatar>
+                                                                    <span className="font-medium text-sm">{devName}</span>
                                                                 </div>
+                                                                <Button size="sm" variant="ghost" onClick={() => handleRemoveDeveloper(part.part, devName)}>Remove</Button>
                                                             </div>
-                                                            <Button size="sm" variant="ghost" onClick={() => handleRemoveDeveloper(part.part, devName)}>Remove</Button>
+                                                            {isSuggested && (
+                                                                <Accordion type="single" collapsible className="w-full">
+                                                                    <AccordionItem value="item-1" className="border-b-0">
+                                                                        <AccordionTrigger className="py-1 text-xs hover:no-underline justify-start gap-1">
+                                                                            <Badge variant="secondary">Auto-assigned</Badge>
+                                                                            <span>Show reasoning</span>
+                                                                        </AccordionTrigger>
+                                                                        <AccordionContent className="text-xs text-muted-foreground italic px-2">
+                                                                            "{part.suggestionReasoning}"
+                                                                        </AccordionContent>
+                                                                    </AccordionItem>
+                                                                </Accordion>
+                                                            )}
                                                         </div>
                                                     )
                                                 })}
