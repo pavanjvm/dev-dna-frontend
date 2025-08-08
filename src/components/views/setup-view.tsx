@@ -136,7 +136,7 @@ export function SetupView({
                                                             <div className="flex items-center justify-between">
                                                                 <div className="flex items-center gap-2">
                                                                     <Avatar className="w-8 h-8">
-                                                                        <AvatarImage src={`https://placehold.co/100x100.png`} alt={devName} data-ai-hint="person avatar"/>
+                                                                        <AvatarImage src={`https://github.com/${devName}.png`} alt={devName} data-ai-hint="person avatar"/>
                                                                         <AvatarFallback>{devName.split(" ").map(n => n[0]).join("")}</AvatarFallback>
                                                                     </Avatar>
                                                                     <span className="font-medium text-sm">{devName}</span>
@@ -191,7 +191,7 @@ export function SetupView({
                                                         <div className="flex items-center justify-between p-2 rounded-md hover:bg-secondary cursor-pointer" onClick={() => handleAddDeveloper(part.part, dev.name)}>
                                                             <div className="flex items-center gap-2">
                                                                 <Avatar className="w-6 h-6">
-                                                                    <AvatarImage src={`https://placehold.co/100x100.png`} alt={dev.name} data-ai-hint="person avatar small"/>
+                                                                    <AvatarImage src={`https://github.com/${dev.name}.png`} alt={dev.name} data-ai-hint="person avatar small"/>
                                                                     <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
                                                                 </Avatar>
                                                                 <span className="text-sm font-medium">{dev.name}</span>

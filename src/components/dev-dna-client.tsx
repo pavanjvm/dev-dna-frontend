@@ -186,19 +186,16 @@ export function DevDnaClient() {
         tickets: [], 
       }));
 
-      const teamMap = new Map<string, { skills: string[], reasoning: string }>();
-      projectBreakdown.forEach(part => {
+      const teamMap = new Map<string, { name: string, skills: string[], reasoning: string }>();
+        projectBreakdown.forEach(part => {
         if (!teamMap.has(part.suggestedDeveloper)) {
-            teamMap.set(part.suggestedDeveloper, { skills: [], reasoning: '' });
+            teamMap.set(part.suggestedDeveloper, { name: part.suggestedDeveloper, skills: [], reasoning: '' });
         }
         teamMap.get(part.suggestedDeveloper)!.skills.push(part.part);
         teamMap.get(part.suggestedDeveloper)!.reasoning = part.suggestionReasoning;
       });
 
-      const team = Array.from(teamMap.entries()).map(([name, data]) => ({
-          name,
-          ...data,
-      }));
+      const team = Array.from(teamMap.values());
 
 
       const result: ProjectAnalysis = {

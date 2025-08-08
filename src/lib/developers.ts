@@ -53,8 +53,8 @@ export type Developer = {
         "Shell Scripting",
         "Cloud"
       ],
-      "strengths": "Demonstrates versatility across many technologies, with experience in scripting, web development, backend services, DevOps practices, and data science. Skilled with infrastructure-related configuration and cross-domain tooling.",
-      "weakness": "Lack of publicly available PR diffs and reviews prevents deeper analysis of code quality and collaboration. There is insufficient data to assess architectural thinking or long-term maintainability.",
+      "strengths": "Demonstrates high versatility across scripting, infrastructure automation, and full-stack development. Shows comfort with system-level configurations and DevOps pipelines. Capable of adapting to cross-functional tasks spanning web, data, and operational tooling.",
+      "weakness": "Lack of publicly available pull requests or collaboration-related metrics makes it difficult to assess code quality, teamwork, or architectural decisions.",
       "type_of_work_in_percentage": {
         "features": 40,
         "bugs": 10,

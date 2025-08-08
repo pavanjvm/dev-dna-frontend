@@ -70,7 +70,7 @@ export function DashboardView({
 
     return (
         <div className="w-full max-w-7xl grid gap-8 animate-in fade-in-50 text-white">
-        <Card className="bg-transparent border-border/50">
+        <Card className="bg-card/80 border-border/50">
           <CardHeader>
             <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
               <LayoutDashboard className="w-10 h-10 text-primary hidden md:block" />
@@ -86,7 +86,7 @@ export function DashboardView({
           </CardHeader>
         </Card>
 
-        <Card className="bg-transparent border-border/50">
+        <Card className="bg-card/80 border-border/50">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
                 <CardTitle className="font-headline flex items-center gap-2">
@@ -114,7 +114,7 @@ export function DashboardView({
                                     <Tooltip>
                                         <TooltipTrigger>
                                             <Avatar className="w-8 h-8">
-                                                <AvatarImage src={`https://placehold.co/100x100.png`} alt={devName} data-ai-hint="person avatar small"/>
+                                                <AvatarImage src={`https://github.com/${devName}.png`} alt={devName} data-ai-hint="person avatar small"/>
                                                 <AvatarFallback>{devName.split(" ").map(n => n[0]).join("")}</AvatarFallback>
                                             </Avatar>
                                         </TooltipTrigger>
@@ -133,7 +133,7 @@ export function DashboardView({
         </Card>
 
         <div className="grid lg:grid-cols-3 gap-6">
-            <Card className="lg:col-span-1 bg-transparent border-border/50">
+            <Card className="lg:col-span-1 bg-card/80 border-border/50">
                 <CardHeader>
                     <CardTitle className="font-headline flex items-center gap-2"><Users className="w-6 h-6" />Project Team</CardTitle>
                 </CardHeader>
@@ -143,7 +143,7 @@ export function DashboardView({
                             <div className="flex -space-x-2 overflow-hidden">
                                 {analysisResult.team.slice(0, 5).map((dev) => (
                                     <Avatar key={dev.name} className="inline-block border-2 border-background">
-                                        <AvatarImage src={`https://placehold.co/100x100.png`} alt={dev.name} data-ai-hint="person avatar"/>
+                                        <AvatarImage src={`https://github.com/${dev.name}.png`} alt={dev.name} data-ai-hint="person avatar"/>
                                         <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
                                     </Avatar>
                                 ))}
@@ -164,7 +164,7 @@ export function DashboardView({
                     {analysisResult.team.slice(0,3).map(dev => (
                         <li key={dev.name} className="flex items-start gap-2">
                         <Avatar className="w-5 h-5 mt-1">
-                            <AvatarImage src={`https://placehold.co/100x100.png`} alt={dev.name} data-ai-hint="person avatar small"/>
+                            <AvatarImage src={`https://github.com/${dev.name}.png`} alt={dev.name} data-ai-hint="person avatar small"/>
                             <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
                         </Avatar>
                         <div>
@@ -177,7 +177,7 @@ export function DashboardView({
                 </CardContent>
             </Card>
 
-            <Card className="lg:col-span-2 bg-transparent border-border/50">
+            <Card className="lg:col-span-2 bg-card/80 border-border/50">
                 <CardHeader>
                     <CardTitle className="font-headline flex items-center gap-2"><Ticket className="w-6 h-6"/>Jira Board</CardTitle>
                     <CardDescription className="text-white/80">Tasks assigned to developers for this project.</CardDescription>
@@ -222,7 +222,7 @@ export function DashboardView({
                                 <SelectItem key={dev.name} value={dev.name}>
                                   <div className="flex items-center gap-2">
                                     <Avatar className="w-6 h-6">
-                                      <AvatarImage src={`https://placehold.co/100x100.png`} alt={dev.name} data-ai-hint="person avatar small"/>
+                                      <AvatarImage src={`https://github.com/${dev.name}.png`} alt={dev.name} data-ai-hint="person avatar small"/>
                                       <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
                                     </Avatar>
                                     <span>{dev.name}</span>
@@ -243,7 +243,7 @@ export function DashboardView({
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
-            <Card className="lg:col-span-2 bg-transparent border-border/50">
+            <Card className="lg:col-span-2 bg-card/80 border-border/50">
                 <CardHeader>
                     <CardTitle className="font-headline flex items-center gap-2"><Newspaper className="w-6 h-6" />Daily Updates</CardTitle>
                 </CardHeader>
@@ -254,7 +254,7 @@ export function DashboardView({
                                 {analysisResult.dailyUpdates.map((update, index) => (
                                     <div key={index} className="flex items-start gap-3">
                                         <Avatar className="w-8 h-8 mt-1">
-                                            <AvatarImage src={`https://placehold.co/100x100.png`} alt={update.developerName} data-ai-hint="person avatar small"/>
+                                            <AvatarImage src={`https://github.com/${update.developerName}.png`} alt={update.developerName} data-ai-hint="person avatar small"/>
                                             <AvatarFallback>{update.developerName.split(" ").map(n => n[0]).join("")}</AvatarFallback>
                                         </Avatar>
                                         <div>
@@ -277,7 +277,7 @@ export function DashboardView({
                     )}
                 </CardContent>
             </Card>
-            <Card className="lg:col-span-1 bg-transparent border-border/50">
+            <Card className="lg:col-span-1 bg-card/80 border-border/50">
                 <CardHeader>
                     <CardTitle className="font-headline flex items-center gap-2"><Star className="w-6 h-6" />Leaderboard</CardTitle>
                     <CardDescription className="text-white/80">Top contributors based on project activity.</CardDescription>
@@ -288,7 +288,7 @@ export function DashboardView({
                             <li key={dev.name} className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <Avatar className="w-9 h-9">
-                                        <AvatarImage src={`https://placehold.co/100x100.png`} alt={dev.name} data-ai-hint="person avatar small"/>
+                                        <AvatarImage src={`https://github.com/${dev.name}.png`} alt={dev.name} data-ai-hint="person avatar small"/>
                                         <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
                                     </Avatar>
                                     <div>
