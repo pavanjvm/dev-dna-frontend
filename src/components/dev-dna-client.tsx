@@ -9,6 +9,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { UploadView } from "@/components/views/upload-view";
 import { SetupView } from "@/components/views/setup-view";
 import { DashboardView } from "@/components/views/dashboard-view";
+import { Topbar } from "@/components/topbar";
 
 export type JiraTaskStatus = 'To Do' | 'In Progress' | 'Done' | 'Blocked';
 
@@ -65,7 +66,7 @@ export type View = 'upload' | 'setup' | 'dashboard';
 export type SetupStep = 'repository' | 'breakdown';
 
 
-export function ProjectGenesisClient() {
+export function DevDnaClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -78,7 +79,7 @@ export function ProjectGenesisClient() {
 
   const [repoOption, setRepoOption] = useState('create');
   const [repoUrl, setRepoUrl] = useState('');
-  const [repoName, setRepoName] = useState('project-genesis-app');
+  const [repoName, setRepoName] = useState('dev-dna-app');
   const [assignedDevelopers, setAssignedDevelopers] = useState<Record<string, string[]>>({});
 
   const { toast } = useToast();
@@ -274,9 +275,8 @@ export function ProjectGenesisClient() {
     }
 
     try {
-        const response = await fetch("http://localhost:8000/projects", {
+        const response = await fetch("http://localhost:3001/query", {
             method: "POST",
-            mode: 'cors',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -360,21 +360,26 @@ export function ProjectGenesisClient() {
   };
   
   return (
-    <div className="container mx-auto p-4 md:p-8">
-      <div className="text-center mb-8">
-        <h1 className="font-headline text-5xl font-bold tracking-tighter">
-          Project Genesis
-        </h1>
-        <p className="text-muted-foreground text-lg">
-          {analysisResult 
-            ? 'Your project dashboard is live.' 
-            : 'Intelligently kickstart your software projects.'
-          }
-        </p>
-      </div>
-      
-      <div className="flex items-start justify-center">
-        {renderContent()}
+    <div>
+      {currentView === 'dashboard' && analysisResult && <Topbar projectTitle={analysisResult.repository.name} />}
+      <div className="container mx-auto p-4 md:p-8">
+        {currentView !== 'dashboard' && (
+          <div className="text-center mb-8">
+            <h1 className="font-headline text-5xl font-bold tracking-tighter">
+              Dev DNA
+            </h1>
+            <p className="text-muted-foreground text-lg">
+              {analysisResult 
+                ? 'Your project dashboard is live.' 
+                : 'Intelligently kickstart your software projects.'
+              }
+            </p>
+          </div>
+        )}
+        
+        <div className="flex items-start justify-center">
+          {renderContent()}
+        </div>
       </div>
     </div>
   );

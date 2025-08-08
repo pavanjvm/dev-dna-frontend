@@ -1,10 +1,10 @@
-import { ProjectGenesisClient } from '@/components/project-genesis-client';
+import { DevDnaClient } from '@/components/dev-dna-client';
 import { Suspense } from 'react';
 
-function ProjectGenesisPage() {
+function DevDnaPage() {
   return (
     <main className="bg-background min-h-screen">
-      <ProjectGenesisClient />
+      <DevDnaClient />
     </main>
   );
 }
@@ -12,7 +12,7 @@ function ProjectGenesisPage() {
 export default function Home() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <ProjectGenesisPage />
+      <DevDnaPage />
     </Suspense>
   )
 }

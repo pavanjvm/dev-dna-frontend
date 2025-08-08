@@ -4,7 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Chatbot } from '@/components/chatbot';
 
 export const metadata: Metadata = {
-  title: 'Project Genesis',
+  title: 'Dev DNA',
   description: 'An intelligent platform to kickstart your software projects.',
 };
 

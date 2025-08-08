@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Github, UploadCloud, ChevronRight, Check, PlusCircle, Search, UserPlus, ArrowLeft } from 'lucide-react';
-import { ProjectAnalysis, SetupStep } from '@/components/project-genesis-client';
+import { ProjectAnalysis, SetupStep } from '@/components/dev-dna-client';
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
