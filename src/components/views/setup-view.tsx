@@ -128,33 +128,24 @@ export function SetupView({
                                         <div>
                                             <h4 className="text-sm font-semibold mb-2">Assigned Developers</h4>
                                             <div className="space-y-2 min-h-[6rem]">
-                                                {part.suggestedDeveloper && (assignedDevelopers[part.part] || []).includes(part.suggestedDeveloper) && (
-                                                    <div className="flex items-center justify-between p-2 bg-background rounded-lg">
-                                                        <div className="flex items-center gap-2">
-                                                            <Avatar className="w-8 h-8">
-                                                                <AvatarImage src={`https://placehold.co/100x100.png`} alt={part.suggestedDeveloper} data-ai-hint="person avatar"/>
-                                                                <AvatarFallback>{part.suggestedDeveloper.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-                                                            </Avatar>
-                                                            <div>
-                                                                <span className="font-medium text-sm">{part.suggestedDeveloper} <Badge variant="secondary" className="ml-1">Auto-assigned</Badge></span>
-                                                                <p className="text-xs text-muted-foreground italic">"{part.suggestionReasoning}"</p>
+                                                {(assignedDevelopers[part.part] || []).map(devName => {
+                                                    const isSuggested = devName === part.suggestedDeveloper;
+                                                    return (
+                                                        <div key={devName} className="flex items-center justify-between p-2 bg-background rounded-lg">
+                                                            <div className="flex items-center gap-2">
+                                                                <Avatar className="w-8 h-8">
+                                                                    <AvatarImage src={`https://placehold.co/100x100.png`} alt={devName} data-ai-hint="person avatar"/>
+                                                                    <AvatarFallback>{devName.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                                                </Avatar>
+                                                                <div>
+                                                                    <span className="font-medium text-sm">{devName} {isSuggested && <Badge variant="secondary" className="ml-1">Auto-assigned</Badge>}</span>
+                                                                    {isSuggested && <p className="text-xs text-muted-foreground italic">"{part.suggestionReasoning}"</p>}
+                                                                </div>
                                                             </div>
+                                                            <Button size="sm" variant="ghost" onClick={() => handleRemoveDeveloper(part.part, devName)}>Remove</Button>
                                                         </div>
-                                                        <Button size="sm" variant="ghost" onClick={() => handleRemoveDeveloper(part.part, part.suggestedDeveloper)}>Remove</Button>
-                                                    </div>
-                                                )}
-                                                {(assignedDevelopers[part.part] || []).filter(d => d !== part.suggestedDeveloper).map(devName => (
-                                                    <div key={devName} className="flex items-center justify-between p-2 bg-background rounded-lg">
-                                                        <div className="flex items-center gap-2">
-                                                            <Avatar className="w-8 h-8">
-                                                                <AvatarImage src={`https://placehold.co/100x100.png`} alt={devName} data-ai-hint="person avatar"/>
-                                                                <AvatarFallback>{devName.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-                                                            </Avatar>
-                                                            <span className="font-medium text-sm">{devName}</span>
-                                                        </div>
-                                                        <Button size="sm" variant="ghost" onClick={() => handleRemoveDeveloper(part.part, devName)}>Remove</Button>
-                                                    </div>
-                                                ))}
+                                                    )
+                                                })}
                                             </div>
                                         </div>
                                         
@@ -238,5 +229,3 @@ export function SetupView({
             return renderRepoStep();
     }
 }
-
-    
