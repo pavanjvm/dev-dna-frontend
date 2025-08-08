@@ -84,16 +84,15 @@ export function DevDnaClient() {
 
   const { toast } = useToast();
 
-  const setCurrentView = (view: View) => {
-    router.push(`/?view=${view}`);
-  };
-
-  const setSetupStep = (step: SetupStep) => {
-    router.push(`/?view=setup&step=${step}`);
-  };
+  const setCurrentView = (view: View, step?: SetupStep) => {
+    let path = `/project?view=${view}`;
+    if (view === 'setup' && step) {
+        path += `&step=${step}`;
+    }
+    router.push(path);
+};
 
   useEffect(() => {
-    // Attempt to load analysis from session storage on initial load
     const storedAnalysis = sessionStorage.getItem('projectAnalysis');
     if (storedAnalysis) {
         try {
@@ -117,7 +116,6 @@ export function DevDnaClient() {
         if (!prev) return null;
         const newUpdates = [...prev.dailyUpdates];
         customEvent.detail.forEach(newUpdate => {
-          // Avoid adding duplicate updates
           if (!newUpdates.some(existing => existing.developerName === newUpdate.developerName && existing.date === newUpdate.date && existing.update === newUpdate.update)) {
             newUpdates.push(newUpdate);
           }
@@ -232,7 +230,7 @@ export function DevDnaClient() {
           }
       });
       setAssignedDevelopers(initialAssignments);
-      setCurrentView('setup');
+      setCurrentView('setup', 'repository');
 
     } catch (error) {
       console.error("Analysis failed:", error);
@@ -306,12 +304,12 @@ export function DevDnaClient() {
 };
   
   const renderContent = () => {
-    if (isLoading) {
+    if (isLoading && currentView !== 'dashboard') {
       return (
-        <div className="flex flex-col items-center gap-4 text-center">
+        <div className="flex flex-col items-center gap-4 text-center h-screen justify-center text-white">
             <Loader2 className="w-16 h-16 animate-spin text-primary" />
-            <p className="text-muted-foreground text-lg">Please wait...</p>
-            <p className="text-sm text-muted-foreground">The agent is working its magic.</p>
+            <p className="text-lg">Please wait...</p>
+            <p className="text-sm">The agent is working its magic.</p>
         </div>
       );
     }
@@ -319,20 +317,22 @@ export function DevDnaClient() {
     switch (currentView) {
         case 'setup':
             return (
-              <SetupView
-                analysisResult={analysisResult}
-                setupStep={setupStep}
-                setSetupStep={setSetupStep}
-                repoOption={repoOption}
-                setRepoOption={setRepoOption}
-                repoName={repoName}
-                setRepoName={setRepoName}
-                repoUrl={repoUrl}
-                setRepoUrl={setRepoUrl}
-                assignedDevelopers={assignedDevelopers}
-                setAssignedDevelopers={setAssignedDevelopers}
-                handleCreateProject={handleCreateProject}
-              />
+              <div className="flex items-center justify-center min-h-screen">
+                <SetupView
+                  analysisResult={analysisResult}
+                  setupStep={setupStep}
+                  setSetupStep={(step) => setCurrentView('setup', step)}
+                  repoOption={repoOption}
+                  setRepoOption={setRepoOption}
+                  repoName={repoName}
+                  setRepoName={setRepoName}
+                  repoUrl={repoUrl}
+                  setRepoUrl={setRepoUrl}
+                  assignedDevelopers={assignedDevelopers}
+                  setAssignedDevelopers={setAssignedDevelopers}
+                  handleCreateProject={handleCreateProject}
+                />
+              </div>
             );
         case 'dashboard':
             return (
@@ -343,18 +343,20 @@ export function DevDnaClient() {
                 repoUrl={repoUrl}
                 assignedDevelopers={assignedDevelopers}
                 setCurrentView={setCurrentView}
-                setSetupStep={setSetupStep}
+                setSetupStep={(step) => setCurrentView('setup', step)}
               />
             );
         case 'upload':
         default:
             return (
-              <UploadView 
-                file={file}
-                isLoading={isLoading}
-                handleFileChange={handleFileChange}
-                handleAnalyze={handleAnalyze}
-              />
+              <div className="flex items-center justify-center min-h-screen">
+                <UploadView 
+                  file={file}
+                  isLoading={isLoading}
+                  handleFileChange={handleFileChange}
+                  handleAnalyze={handleAnalyze}
+                />
+              </div>
             );
     }
   };
@@ -362,24 +364,19 @@ export function DevDnaClient() {
   return (
     <div>
       {currentView === 'dashboard' && analysisResult && <Topbar projectTitle={analysisResult.repository.name} />}
-      <div className="container mx-auto p-4 md:p-8">
-        {currentView !== 'dashboard' && (
-          <div className="text-center mb-8">
+       <div className="container mx-auto p-4 md:p-8">
+         {currentView !== 'dashboard' && (
+          <div className="text-center mb-8 absolute top-10 left-1/2 -translate-x-1/2 text-white">
             <h1 className="font-headline text-5xl font-bold tracking-tighter">
               Dev DNA
             </h1>
-            <p className="text-muted-foreground text-lg">
-              {analysisResult 
-                ? 'Your project dashboard is live.' 
-                : 'Intelligently kickstart your software projects.'
-              }
+            <p className="text-white/80 text-lg">
+              Intelligently kickstart your software projects.
             </p>
           </div>
         )}
         
-        <div className="flex items-start justify-center">
-          {renderContent()}
-        </div>
+        {renderContent()}
       </div>
     </div>
   );

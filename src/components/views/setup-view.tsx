@@ -45,23 +45,23 @@ export function SetupView({
     const [searchQuery, setSearchQuery] = useState('');
 
     const renderRepoStep = () => (
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm text-white border-border/50">
           <CardHeader>
             <CardTitle>Repository Setup</CardTitle>
-            <CardDescription>Create a new repository or link to an existing one.</CardDescription>
+            <CardDescription className="text-white/70">Create a new repository or link to an existing one.</CardDescription>
           </CardHeader>
           <CardContent>
             <RadioGroup value={repoOption} onValueChange={setRepoOption} className="grid grid-cols-2 gap-4">
               <div>
                 <RadioGroupItem value="create" id="r1" className="peer sr-only" />
-                <Label htmlFor="r1" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
+                <Label htmlFor="r1" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover/80 p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
                   <Github className="mb-3 h-6 w-6" />
                   Create New
                 </Label>
               </div>
               <div>
                 <RadioGroupItem value="existing" id="r2" className="peer sr-only" />
-                <Label htmlFor="r2" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
+                <Label htmlFor="r2" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover/80 p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
                   <UploadCloud className="mb-3 h-6 w-6" />
                   Use Existing
                 </Label>
@@ -109,20 +109,20 @@ export function SetupView({
         };
 
         return (
-            <Card className="w-full max-w-7xl animate-in fade-in-50">
+            <Card className="w-full max-w-7xl animate-in fade-in-50 bg-card/80 backdrop-blur-sm text-white border-border/50">
                  <CardHeader>
                     <CardTitle>Project Breakdown &amp; Assignments</CardTitle>
-                    <CardDescription>Assign developers to each part of the project. Developers can be assigned to multiple parts.</CardDescription>
+                    <CardDescription className="text-white/70">Assign developers to each part of the project. Developers can be assigned to multiple parts.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <TooltipProvider>
                     <ScrollArea className="w-full pb-4">
                         <div className="flex gap-6">
                             {analysisResult.projectBreakdown.map((part) => (
-                                <Card key={part.part} className="w-[350px] shrink-0 bg-secondary/50">
+                                <Card key={part.part} className="w-[350px] shrink-0 bg-secondary/20 border-border/50">
                                     <CardHeader>
                                         <CardTitle className="text-xl">{part.part}</CardTitle>
-                                        <CardDescription>{part.description}</CardDescription>
+                                        <CardDescription className="text-white/70">{part.description}</CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         <div>
@@ -131,7 +131,7 @@ export function SetupView({
                                                 {(assignedDevelopers[part.part] || []).map(devName => {
                                                     const isSuggested = devName === part.suggestedDeveloper;
                                                     return (
-                                                        <div key={devName} className="flex items-center justify-between p-2 bg-background rounded-lg">
+                                                        <div key={devName} className="flex items-center justify-between p-2 bg-background/50 rounded-lg">
                                                             <div className="flex items-center gap-2">
                                                                 <Avatar className="w-8 h-8">
                                                                     <AvatarImage src={`https://placehold.co/100x100.png`} alt={devName} data-ai-hint="person avatar"/>

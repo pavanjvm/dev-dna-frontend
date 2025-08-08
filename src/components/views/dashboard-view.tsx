@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import type { ProjectAnalysis, JiraTaskStatus, View, SetupStep } from '@/components/project-genesis-client';
+import type { ProjectAnalysis, JiraTaskStatus, View, SetupStep } from '@/components/dev-dna-client';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +19,7 @@ type DashboardViewProps = {
     repoName: string;
     repoUrl: string;
     assignedDevelopers: Record<string, string[]>;
-    setCurrentView: (view: View) => void;
+    setCurrentView: (view: View, step?: SetupStep) => void;
     setSetupStep: (step: SetupStep) => void;
 };
 
@@ -68,14 +68,14 @@ export function DashboardView({
     };
 
     return (
-        <div className="w-full max-w-7xl grid gap-8 animate-in fade-in-50">
-        <Card>
+        <div className="w-full max-w-7xl grid gap-8 animate-in fade-in-50 text-white">
+        <Card className="bg-transparent border-border/50">
           <CardHeader>
             <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
               <LayoutDashboard className="w-10 h-10 text-primary hidden md:block" />
               <div className="flex-grow">
                 <CardTitle className="font-headline text-4xl">{repoOption === 'create' ? repoName : analysisResult.repository.name}</CardTitle>
-                <CardDescription className="text-base mt-1">{analysisResult.analysis.summary}</CardDescription>
+                <CardDescription className="text-base mt-1 text-white/80">{analysisResult.analysis.summary}</CardDescription>
                 <a href={repoOption === 'create' ? `https://github.com/example/${repoName}` : repoUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1 mt-2">
                     <Github className="w-4 h-4" />
                     {repoOption === 'create' ? `https://github.com/example/${repoName}` : repoUrl}
@@ -85,26 +85,26 @@ export function DashboardView({
           </CardHeader>
         </Card>
 
-        <Card>
+        <Card className="bg-transparent border-border/50">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
                 <CardTitle className="font-headline flex items-center gap-2">
                 <Puzzle className="w-6 h-6" />
                 Project Breakdown
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-white/80">
                 The project has been broken down into parts with assigned developers.
                 </CardDescription>
             </div>
-             <Button variant="outline" onClick={() => { setCurrentView('setup'); setSetupStep('breakdown'); }}>View &amp; Edit Assignments</Button>
+             <Button variant="outline" onClick={() => { setCurrentView('setup', 'breakdown'); }}>View &amp; Edit Assignments</Button>
           </CardHeader>
           <CardContent>
              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {analysisResult.projectBreakdown.map((part) => (
-                    <Card key={part.part} className="bg-secondary/50">
+                    <Card key={part.part} className="bg-secondary/20 border-border/50">
                     <CardHeader>
                         <CardTitle className="text-lg truncate">{part.part}</CardTitle>
-                        <CardDescription className="truncate">{part.description}</CardDescription>
+                        <CardDescription className="truncate text-white/70">{part.description}</CardDescription>
                     </CardHeader>
                     <CardFooter>
                         <div className="flex items-center gap-2 text-sm flex-wrap">
@@ -132,7 +132,7 @@ export function DashboardView({
         </Card>
 
         <div className="grid lg:grid-cols-3 gap-6">
-            <Card className="lg:col-span-1">
+            <Card className="lg:col-span-1 bg-transparent border-border/50">
                 <CardHeader>
                     <CardTitle className="font-headline flex items-center gap-2"><Users className="w-6 h-6" />Project Team</CardTitle>
                 </CardHeader>
@@ -168,10 +168,10 @@ export function DashboardView({
                 </CardContent>
             </Card>
 
-            <Card className="lg:col-span-2">
+            <Card className="lg:col-span-2 bg-transparent border-border/50">
                 <CardHeader>
                     <CardTitle className="font-headline flex items-center gap-2"><Ticket className="w-6 h-6"/>Jira Board</CardTitle>
-                    <CardDescription>Tasks assigned to developers for this project.</CardDescription>
+                    <CardDescription className="text-white/80">Tasks assigned to developers for this project.</CardDescription>
                 </CardHeader>
                 <CardContent className="flex items-center justify-center h-48">
                   <Dialog>
@@ -234,7 +234,7 @@ export function DashboardView({
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
-            <Card className="lg:col-span-2">
+            <Card className="lg:col-span-2 bg-transparent border-border/50">
                 <CardHeader>
                     <CardTitle className="font-headline flex items-center gap-2"><Newspaper className="w-6 h-6" />Daily Updates</CardTitle>
                 </CardHeader>
@@ -268,10 +268,10 @@ export function DashboardView({
                     )}
                 </CardContent>
             </Card>
-            <Card className="lg:col-span-1">
+            <Card className="lg:col-span-1 bg-transparent border-border/50">
                 <CardHeader>
                     <CardTitle className="font-headline flex items-center gap-2"><Star className="w-6 h-6" />Leaderboard</CardTitle>
-                    <CardDescription>Top contributors based on project activity.</CardDescription>
+                    <CardDescription className="text-white/80">Top contributors based on project activity.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <ul className="space-y-4">

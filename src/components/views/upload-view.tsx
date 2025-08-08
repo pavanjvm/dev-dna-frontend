@@ -21,17 +21,17 @@ type UploadViewProps = {
 
 export function UploadView({ file, isLoading, handleFileChange, handleAnalyze }: UploadViewProps) {
     return (
-        <Card className="w-full max-w-lg text-center">
+        <Card className="w-full max-w-lg text-center bg-card/80 backdrop-blur-sm text-white border-border/50">
             <CardHeader>
                 <CardTitle className="font-headline text-3xl">
                 Start Your Project
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-white/70">
                 Upload your project specification PDF to begin.
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="border-2 border-dashed border-muted-foreground rounded-lg p-12 flex flex-col items-center justify-center space-y-4">
+                <div className="border-2 border-dashed border-muted-foreground/50 rounded-lg p-12 flex flex-col items-center justify-center space-y-4">
                 <UploadCloud className="w-16 h-16 text-primary" />
                 <p className="text-muted-foreground">
                     {file ? file.name : "Drag & drop or click to upload"}
