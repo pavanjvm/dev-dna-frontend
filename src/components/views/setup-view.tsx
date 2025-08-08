@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -131,6 +132,7 @@ export function SetupView({
                                             <div className="space-y-2 min-h-[6rem]">
                                                 {(assignedDevelopers[part.part] || []).map(devName => {
                                                     const isSuggested = devName === part.suggestedDeveloper;
+                                                    const developer = analysisResult.team.find(d => d.name === devName);
                                                     return (
                                                         <div key={devName} className="p-2 bg-background/50 rounded-lg">
                                                             <div className="flex items-center justify-between">
@@ -139,7 +141,7 @@ export function SetupView({
                                                                         <AvatarImage src={`https://github.com/${devName}.png`} alt={devName} data-ai-hint="person avatar"/>
                                                                         <AvatarFallback>{devName.split(" ").map(n => n[0]).join("")}</AvatarFallback>
                                                                     </Avatar>
-                                                                    <span className="font-medium text-sm">{devName}</span>
+                                                                    <span className="font-medium text-sm">{developer?.name}</span>
                                                                 </div>
                                                                 <Button size="sm" variant="ghost" onClick={() => handleRemoveDeveloper(part.part, devName)}>Remove</Button>
                                                             </div>
