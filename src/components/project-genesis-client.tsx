@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, ChangeEvent, useEffect } from "react";
@@ -43,6 +44,19 @@ export type ProjectAnalysis = {
     update: string;
     date: string;
   }[];
+};
+
+type ApiAnalysisResponse = {
+  projectname: string;
+  description: string;
+  module_breakdown: {
+    [key: string]: {
+      title: string;
+      description: string;
+      suggested_developer: string;
+      reasoning: string;
+    }
+  }
 };
 
 export type View = 'upload' | 'setup' | 'dashboard';
@@ -136,7 +150,44 @@ export function ProjectGenesisClient() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const result: ProjectAnalysis = await response.json();
+      const apiResult: ApiAnalysisResponse = await response.json();
+      
+      const projectBreakdown = Object.values(apiResult.module_breakdown).map(mod => ({
+        part: mod.title,
+        description: mod.description,
+        suggestedDeveloper: mod.suggested_developer,
+        suggestionReasoning: mod.reasoning,
+        tickets: [], 
+      }));
+
+      const teamMap = new Map<string, { skills: string[], reasoning: string }>();
+      projectBreakdown.forEach(part => {
+        if (!teamMap.has(part.suggestedDeveloper)) {
+            teamMap.set(part.suggestedDeveloper, { skills: [], reasoning: '' });
+        }
+        teamMap.get(part.suggestedDeveloper)!.skills.push(part.part);
+        teamMap.get(part.suggestedDeveloper)!.reasoning = part.suggestionReasoning;
+      });
+
+      const team = Array.from(teamMap.entries()).map(([name, data]) => ({
+          name,
+          ...data,
+      }));
+
+
+      const result: ProjectAnalysis = {
+        analysis: {
+          summary: apiResult.description,
+          keyAspects: '', 
+        },
+        repository: {
+          name: apiResult.projectname.toLowerCase().replace(/\s+/g, '-'),
+          url: '', 
+        },
+        projectBreakdown,
+        team,
+        dailyUpdates: [],
+      };
       
       try {
           sessionStorage.setItem('projectAnalysis', JSON.stringify(result));
@@ -148,7 +199,9 @@ export function ProjectGenesisClient() {
 
       const initialAssignments: Record<string, string[]> = {};
       result.projectBreakdown.forEach(part => {
-          initialAssignments[part.part] = [part.suggestedDeveloper];
+          if (part.suggestedDeveloper) {
+            initialAssignments[part.part] = [part.suggestedDeveloper];
+          }
       });
       setAssignedDevelopers(initialAssignments);
       setCurrentView('setup');
