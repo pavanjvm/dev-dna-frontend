@@ -15,7 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, Send, Bot, User, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DailyUpdate } from "@/components/project-genesis-client";
+import { DailyUpdate } from "@/components/dev-dna-client";
 import { useToast } from "@/hooks/use-toast";
 
 type Message = {
