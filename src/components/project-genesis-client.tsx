@@ -141,7 +141,7 @@ export function ProjectGenesisClient() {
     formData.append("pdf", file);
 
     try {
-      const response = await fetch("/api/analyse", {
+      const response = await fetch("http://localhost:3000/analyse", {
         method: "POST",
         body: formData,
       });
