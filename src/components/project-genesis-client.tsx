@@ -250,6 +250,7 @@ export function ProjectGenesisClient() {
     try {
         const response = await fetch("http://localhost:8000/projects", {
             method: "POST",
+            mode: 'cors',
             headers: {
                 'Content-Type': 'application/json',
             },
