@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Github, UploadCloud, ChevronRight, Check, PlusCircle, Search, UserPlus, ArrowLeft } from 'lucide-react';
-import { ProjectAnalysis, SetupStep, View } from '@/components/project-genesis-client';
+import { ProjectAnalysis, SetupStep } from '@/components/project-genesis-client';
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -25,7 +25,7 @@ type SetupViewProps = {
     setRepoUrl: (url: string) => void;
     assignedDevelopers: Record<string, string[]>;
     setAssignedDevelopers: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
-    setCurrentView: (view: View) => void;
+    handleCreateProject: () => void;
 };
 
 export function SetupView({
@@ -40,7 +40,7 @@ export function SetupView({
     setRepoUrl,
     assignedDevelopers,
     setAssignedDevelopers,
-    setCurrentView,
+    handleCreateProject,
 }: SetupViewProps) {
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -219,7 +219,7 @@ export function SetupView({
                   <Button variant="outline" onClick={() => setSetupStep('repository')}>
                       <ArrowLeft className="w-4 h-4" /> Back
                   </Button>
-                  <Button onClick={() => setCurrentView('dashboard')} className="ml-auto">
+                  <Button onClick={handleCreateProject} className="ml-auto">
                       Create Project <Check className="w-4 h-4" />
                   </Button>
               </CardFooter>
@@ -238,3 +238,5 @@ export function SetupView({
             return renderRepoStep();
     }
 }
+
+    

@@ -217,14 +217,73 @@ export function ProjectGenesisClient() {
       setIsLoading(false);
     }
   };
+
+  const handleCreateProject = async () => {
+    if (!analysisResult) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Project analysis data is missing.",
+        });
+        return;
+    }
+
+    setIsLoading(true);
+
+    let requestBody;
+    if (repoOption === 'create') {
+        requestBody = {
+            action: 'create-repo',
+            name: repoName,
+            description: analysisResult.analysis.summary,
+        };
+    } else {
+        requestBody = {
+            action: 'existing-repo',
+            name: repoName,
+            description: analysisResult.analysis.summary,
+            repo_url: repoUrl,
+        };
+    }
+
+    try {
+        const response = await fetch("http://localhost:8000/projects", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        toast({
+            title: "Project Created!",
+            description: "Your project repository has been set up.",
+        });
+        setCurrentView('dashboard');
+
+    } catch (error) {
+        console.error("Project creation failed:", error);
+        toast({
+            variant: "destructive",
+            title: "Project Creation Failed",
+            description: "Could not create or link the repository. Please try again.",
+        });
+    } finally {
+        setIsLoading(false);
+    }
+};
   
   const renderContent = () => {
     if (isLoading) {
       return (
         <div className="flex flex-col items-center gap-4 text-center">
             <Loader2 className="w-16 h-16 animate-spin text-primary" />
-            <p className="text-muted-foreground text-lg">Analyzing your project...</p>
-            <p className="text-sm text-muted-foreground">This may take a moment. The agent is assembling your team and tasks.</p>
+            <p className="text-muted-foreground text-lg">Please wait...</p>
+            <p className="text-sm text-muted-foreground">The agent is working its magic.</p>
         </div>
       );
     }
@@ -244,7 +303,7 @@ export function ProjectGenesisClient() {
                 setRepoUrl={setRepoUrl}
                 assignedDevelopers={assignedDevelopers}
                 setAssignedDevelopers={setAssignedDevelopers}
-                setCurrentView={setCurrentView}
+                handleCreateProject={handleCreateProject}
               />
             );
         case 'dashboard':
@@ -292,3 +351,5 @@ export function ProjectGenesisClient() {
     </div>
   );
 }
+
+    
