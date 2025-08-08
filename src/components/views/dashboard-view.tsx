@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { LayoutDashboard, Github, Puzzle, Users, Ticket, Circle, CheckCircle2, XCircle, Clock, Newspaper, Star, PlusCircle } from "lucide-react";
+import { LayoutDashboard, Github, Puzzle, Users, Ticket, Circle, CheckCircle2, XCircle, Clock, Newspaper, Star, PlusCircle, UserSquare } from "lucide-react";
+import Link from 'next/link';
 
 type DashboardViewProps = {
     analysisResult: ProjectAnalysis | null;
@@ -137,19 +138,27 @@ export function DashboardView({
                     <CardTitle className="font-headline flex items-center gap-2"><Users className="w-6 h-6" />Project Team</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex items-center gap-4">
-                        <div className="flex -space-x-2 overflow-hidden">
-                            {analysisResult.team.slice(0, 5).map((dev) => (
-                                <Avatar key={dev.name} className="inline-block border-2 border-background">
-                                    <AvatarImage src={`https://placehold.co/100x100.png`} alt={dev.name} data-ai-hint="person avatar"/>
-                                    <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-                                </Avatar>
-                            ))}
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="flex -space-x-2 overflow-hidden">
+                                {analysisResult.team.slice(0, 5).map((dev) => (
+                                    <Avatar key={dev.name} className="inline-block border-2 border-background">
+                                        <AvatarImage src={`https://placehold.co/100x100.png`} alt={dev.name} data-ai-hint="person avatar"/>
+                                        <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                    </Avatar>
+                                ))}
+                            </div>
+                            <div className="text-sm">
+                                <p className="font-semibold">{analysisResult.team.length} Developers</p>
+                                <p className="text-muted-foreground">Team members suggested</p>
+                            </div>
                         </div>
-                        <div className="text-sm">
-                            <p className="font-semibold">{analysisResult.team.length} Developers</p>
-                            <p className="text-muted-foreground">Team members suggested</p>
-                        </div>
+                         <Link href="/developers">
+                            <Button variant="outline" size="sm">
+                                <UserSquare className="w-4 h-4 mr-2" />
+                                View All
+                            </Button>
+                        </Link>
                     </div>
                     <ul className="mt-4 space-y-2 text-sm">
                     {analysisResult.team.slice(0,3).map(dev => (
