@@ -74,7 +74,7 @@ export function Chatbot() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/query", {
+      const response = await fetch("http://localhost:3001/query", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
