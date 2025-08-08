@@ -141,13 +141,14 @@ export function ProjectGenesisClient() {
     formData.append("pdf", file);
 
     try {
-      const response = await fetch("http://localhost:3000/analyse", {
+      const response = await fetch("/api/analyse", {
         method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(`HTTP error! status: ${response.status} - ${errorData.details || errorData.error}`);
       }
 
       const apiResult: ApiAnalysisResponse = await response.json();
@@ -211,7 +212,7 @@ export function ProjectGenesisClient() {
       toast({
         variant: "destructive",
         title: "Analysis Failed",
-        description: "Could not analyze the project. Please try again.",
+        description: error instanceof Error ? error.message : "Could not analyze the project. Please try again.",
       });
     } finally {
       setIsLoading(false);
@@ -351,5 +352,3 @@ export function ProjectGenesisClient() {
     </div>
   );
 }
-
-    
