@@ -74,12 +74,12 @@ export function Chatbot() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:3001/query", {
+      const response = await fetch("/api/query", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({ user: "pavan", message: input }),
       });
 
       if (!response.ok) {
