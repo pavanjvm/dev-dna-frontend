@@ -163,32 +163,16 @@ export function DevDnaClient() {
     formData.append("pdf", file);
 
     try {
-      // NOTE: Using a mock response for demonstration since the backend is not available.
-      // In a real scenario, this would be:
-      // const response = await fetch("http://localhost:3000/analyse", {
-      //   method: "POST",
-      //   body: formData,
-      // });
-      // if (!response.ok) {
-      //    const errorData = await response.json();
-      //    throw new Error(`HTTP error! status: ${response.status} - ${errorData.details || errorData.error}`);
-      // }
-      // const apiResult: ApiAnalysisResponse = await response.json();
+      const response = await fetch("http://localhost:3001/analyse", {
+        method: "POST",
+        body: formData,
+      });
+      if (!response.ok) {
+         const errorData = await response.json();
+         throw new Error(`HTTP error! status: ${response.status} - ${errorData.details || errorData.error}`);
+      }
+      const apiResult: ApiAnalysisResponse = await response.json();
       
-      const apiResult: ApiAnalysisResponse = {
-          "projectname": "Online Bookstore Web Application",
-          "description": "An application enabling users to browse, search, and purchase books online with a customer interface and administrative dashboard.",
-          "module_breakdown": {
-              "User Registration and Login": { "title": "User Authentication", "description": "Handles user registration, login, and secure authentication.", "suggested_developer": "suhaib-md", "reasoning": "suhaib-md has a strong background in security and backend development, making them an ideal choice for implementing secure authentication mechanisms with JWT." },
-              "Search and Filter Books": { "title": "Book Discovery", "description": "Implements search and filter functionalities by category, author, and rating.", "suggested_developer": "pavanjvm", "reasoning": "pavanjvm specializes in frontend development and possesses skills in React.js, which are essential for implementing a dynamic and responsive search and filter feature." },
-              "View Book Details and Reviews": { "title": "Book Detail View", "description": "Displays detailed book information and user reviews.", "suggested_developer": "pavanjvm", "reasoning": "Given pavanjvm's extensive experience in frontend development, they are well-suited to create intuitive interfaces for viewing book details and reviews." },
-              "Shopping Cart Management": { "title": "Shopping Cart", "description": "Allows users to add, remove, and manage books in their shopping cart.", "suggested_developer": "Guhanandan", "reasoning": "Guhanandan has demonstrated proficiency in backend services which will be crucial for handling cart operations and state management." },
-              "Checkout and Payment": { "title": "Checkout and Payment Processing", "description": "Integrates secure checkout and payment functionality using Stripe.", "suggested_developer": "farhanfist10", "reasoning": "farhanfist10's experience in infrastructure and security aligns with the requirements for implementing a dependable payment gateway using Stripe." },
-              "Order and Inventory Management": { "title": "Admin Dashboard", "description": "Provides tools for inventory and order management through the admin dashboard.", "suggested_developer": "Arul6851", "reasoning": "Arul6851's versatility and background in both backend and frontend tasks make them the right fit to handle the complex logic required in an admin dashboard for order and inventory management." }
-          }
-      };
-
-
       const projectBreakdown = Object.values(apiResult.module_breakdown).map(mod => ({
         part: mod.title,
         description: mod.description,
