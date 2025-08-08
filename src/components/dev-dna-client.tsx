@@ -256,52 +256,52 @@ export function DevDnaClient() {
 
     setIsLoading(true);
 
-    let requestBody;
     if (repoOption === 'create') {
-        requestBody = {
+        const requestBody = {
             action: 'create-repo',
             name: repoName,
             description: analysisResult.analysis.summary,
         };
-    } else {
-        requestBody = {
-            action: 'existing-repo',
-            name: repoName,
-            description: analysisResult.analysis.summary,
-            repo_url: repoUrl,
-        };
-    }
 
-    try {
-        const response = await fetch("http://localhost:3001/query", {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(requestBody),
-        });
+        try {
+            const response = await fetch("http://localhost:3001/query", {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestBody),
+            });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            toast({
+                title: "Project Created!",
+                description: "Your project repository has been set up.",
+            });
+            setCurrentView('dashboard');
+
+        } catch (error) {
+            console.error("Project creation failed:", error);
+            toast({
+                variant: "destructive",
+                title: "Project Creation Failed",
+                description: "Could not create the repository. Please try again.",
+            });
+        } finally {
+            setIsLoading(false);
         }
-
+    } else {
+        // For existing repo, just go to dashboard
         toast({
-            title: "Project Created!",
-            description: "Your project repository has been set up.",
+            title: "Project Linked!",
+            description: "You are now viewing the dashboard for your existing project.",
         });
         setCurrentView('dashboard');
-
-    } catch (error) {
-        console.error("Project creation failed:", error);
-        toast({
-            variant: "destructive",
-            title: "Project Creation Failed",
-            description: "Could not create or link the repository. Please try again.",
-        });
-    } finally {
         setIsLoading(false);
     }
-};
+  };
   
   const renderContent = () => {
     if (isLoading && currentView !== 'dashboard') {
