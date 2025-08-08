@@ -53,12 +53,12 @@ export function Chatbot() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/chat", {
+      const response = await fetch("http://localhost:3001/query", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message: input, history: messages }),
+        body: JSON.stringify({ message: input }),
       });
 
       if (!response.ok) {
@@ -148,7 +148,7 @@ export function Chatbot() {
                     </AvatarFallback>
                   </Avatar>
                   <div className="p-3 rounded-lg bg-muted flex items-center">
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <p className="text-sm text-muted-foreground">Thinking...</p>
                   </div>
               </div>
             )}
@@ -157,7 +157,7 @@ export function Chatbot() {
         <form onSubmit={handleSubmit} className="flex gap-2 border-t pt-4">
           <Input
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => setInput(e.targe.value)}
             placeholder="Type your message..."
             disabled={isLoading}
           />
