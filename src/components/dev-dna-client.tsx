@@ -271,6 +271,11 @@ export function DevDnaClient() {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
+            const updatedAnalysis = { ...analysisResult, repository: { ...analysisResult.repository, name: repoName }};
+            setAnalysisResult(updatedAnalysis);
+            sessionStorage.setItem('projectAnalysis', JSON.stringify(updatedAnalysis));
+
+
             toast({
                 title: "Project Created!",
                 description: "Your project repository has been set up.",
@@ -288,7 +293,9 @@ export function DevDnaClient() {
             setIsLoading(false);
         }
     } else {
-        // For existing repo, just go to dashboard
+        const updatedAnalysis = { ...analysisResult, repository: { ...analysisResult.repository, url: repoUrl }};
+        setAnalysisResult(updatedAnalysis);
+        sessionStorage.setItem('projectAnalysis', JSON.stringify(updatedAnalysis));
         toast({
             title: "Project Linked!",
             description: "You are now viewing the dashboard for your existing project.",
