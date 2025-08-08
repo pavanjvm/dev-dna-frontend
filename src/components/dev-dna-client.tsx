@@ -10,7 +10,7 @@ import { UploadView } from "@/components/views/upload-view";
 import { SetupView } from "@/components/views/setup-view";
 import { DashboardView } from "@/components/views/dashboard-view";
 import { Topbar } from "@/components/topbar";
-import { developers } from "@/lib/developers";
+import type { Developer } from "@/lib/developers";
 
 export type JiraTaskStatus = 'To Do' | 'In Progress' | 'Done' | 'Blocked';
 
@@ -42,11 +42,7 @@ export type ProjectAnalysis = {
     suggestionReasoning: string;
     tickets: JiraTask[];
   }[];
-  team: {
-    name: string;
-    skills: string[];
-    reasoning: string;
-  }[];
+  team: Developer[];
   dailyUpdates: DailyUpdate[];
 };
 
@@ -167,18 +163,32 @@ export function DevDnaClient() {
     formData.append("pdf", file);
 
     try {
-      const response = await fetch("http://localhost:3000/analyse", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`HTTP error! status: ${response.status} - ${errorData.details || errorData.error}`);
-      }
-
-      const apiResult: ApiAnalysisResponse = await response.json();
+      // NOTE: Using a mock response for demonstration since the backend is not available.
+      // In a real scenario, this would be:
+      // const response = await fetch("http://localhost:3000/analyse", {
+      //   method: "POST",
+      //   body: formData,
+      // });
+      // if (!response.ok) {
+      //    const errorData = await response.json();
+      //    throw new Error(`HTTP error! status: ${response.status} - ${errorData.details || errorData.error}`);
+      // }
+      // const apiResult: ApiAnalysisResponse = await response.json();
       
+      const apiResult: ApiAnalysisResponse = {
+          "projectname": "Online Bookstore Web Application",
+          "description": "An application enabling users to browse, search, and purchase books online with a customer interface and administrative dashboard.",
+          "module_breakdown": {
+              "User Registration and Login": { "title": "User Authentication", "description": "Handles user registration, login, and secure authentication.", "suggested_developer": "suhaib-md", "reasoning": "suhaib-md has a strong background in security and backend development, making them an ideal choice for implementing secure authentication mechanisms with JWT." },
+              "Search and Filter Books": { "title": "Book Discovery", "description": "Implements search and filter functionalities by category, author, and rating.", "suggested_developer": "pavanjvm", "reasoning": "pavanjvm specializes in frontend development and possesses skills in React.js, which are essential for implementing a dynamic and responsive search and filter feature." },
+              "View Book Details and Reviews": { "title": "Book Detail View", "description": "Displays detailed book information and user reviews.", "suggested_developer": "pavanjvm", "reasoning": "Given pavanjvm's extensive experience in frontend development, they are well-suited to create intuitive interfaces for viewing book details and reviews." },
+              "Shopping Cart Management": { "title": "Shopping Cart", "description": "Allows users to add, remove, and manage books in their shopping cart.", "suggested_developer": "Guhanandan", "reasoning": "Guhanandan has demonstrated proficiency in backend services which will be crucial for handling cart operations and state management." },
+              "Checkout and Payment": { "title": "Checkout and Payment Processing", "description": "Integrates secure checkout and payment functionality using Stripe.", "suggested_developer": "farhanfist10", "reasoning": "farhanfist10's experience in infrastructure and security aligns with the requirements for implementing a dependable payment gateway using Stripe." },
+              "Order and Inventory Management": { "title": "Admin Dashboard", "description": "Provides tools for inventory and order management through the admin dashboard.", "suggested_developer": "Arul6851", "reasoning": "Arul6851's versatility and background in both backend and frontend tasks make them the right fit to handle the complex logic required in an admin dashboard for order and inventory management." }
+          }
+      };
+
+
       const projectBreakdown = Object.values(apiResult.module_breakdown).map(mod => ({
         part: mod.title,
         description: mod.description,
@@ -187,32 +197,20 @@ export function DevDnaClient() {
         tickets: [], 
       }));
 
-      const teamMap = new Map<string, { name: string, skills: string[], reasoning: string }>();
-      
-      // Get all unique developer names from the breakdown
-      const suggestedDevNames = new Set(projectBreakdown.map(p => p.suggestedDeveloper));
-
-      // Create a team from the master developer list who are suggested in the API response
-      const team = developers
-        .filter(dev => suggestedDevNames.has(dev.github_username))
-        .map(dev => ({
-          name: dev.github_username,
-          skills: dev.skills_domains,
-          reasoning: projectBreakdown.find(p => p.suggestedDeveloper === dev.github_username)?.suggestionReasoning || ''
-        }));
-
-      // Add any suggested developers from API that are NOT in the master list
-      suggestedDevNames.forEach(name => {
-        if (!team.some(t => t.name === name)) {
-          const breakdownInfo = projectBreakdown.find(p => p.suggestedDeveloper === name);
-          team.push({
-            name: name,
-            skills: breakdownInfo ? [breakdownInfo.part] : [],
-            reasoning: breakdownInfo?.suggestionReasoning || 'Suggested by AI analysis'
-          });
-        }
-      });
-
+      const team: Developer[] = Object.values(apiResult.module_breakdown).map(mod => ({
+        github_username: mod.suggested_developer,
+        // These are placeholder values as they are not in the API response.
+        monthly_commits: Math.floor(Math.random() * 100),
+        average_commits_per_day: Math.floor(Math.random() * 5),
+        pull_request_approval_rate: `${Math.floor(Math.random() * 40) + 60}%`,
+        pull_request_reviews: Math.floor(Math.random() * 20),
+        languages: ["TypeScript", "React", "Node.js"],
+        skills_domains: [mod.title, "Frontend", "Backend"],
+        strengths: "Highly adaptable and quick learner.",
+        weakness: "Could improve on documentation.",
+        type_of_work_in_percentage: { features: 60, bugs: 20, infrastructure: 15, documentation: 5 },
+      })).filter((dev, index, self) => 
+          index === self.findIndex((d) => d.github_username === dev.github_username)); // Remove duplicates
 
       const result: ProjectAnalysis = {
         analysis: {

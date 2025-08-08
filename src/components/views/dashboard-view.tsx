@@ -53,10 +53,10 @@ export function DashboardView({
     const [ticketAssignee, setTicketAssignee] = useState('');
 
     const performanceData = analysisResult.team.map(dev => {
-        const assignedCount = Object.values(assignedDevelopers).flat().filter(d => d === dev.name).length;
-        const updateCount = analysisResult.dailyUpdates.filter(u => u.developerName === dev.name).length;
+        const assignedCount = Object.values(assignedDevelopers).flat().filter(d => d === dev.github_username).length;
+        const updateCount = analysisResult.dailyUpdates.filter(u => u.developerName === dev.github_username).length;
         return {
-            name: dev.name,
+            name: dev.github_username,
             score: (assignedCount * 5) + (updateCount * 2) 
         };
     }).sort((a, b) => b.score - a.score);
@@ -115,7 +115,7 @@ export function DashboardView({
                                         <TooltipTrigger>
                                             <Avatar className="w-8 h-8">
                                                 <AvatarImage src={`https://github.com/${devName}.png`} alt={devName} data-ai-hint="person avatar small"/>
-                                                <AvatarFallback>{devName.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                                <AvatarFallback>{devName.charAt(0).toUpperCase()}</AvatarFallback>
                                             </Avatar>
                                         </TooltipTrigger>
                                         <TooltipContent>
@@ -142,9 +142,9 @@ export function DashboardView({
                         <div className="flex items-center gap-4">
                             <div className="flex -space-x-2 overflow-hidden">
                                 {analysisResult.team.slice(0, 5).map((dev) => (
-                                    <Avatar key={dev.name} className="inline-block border-2 border-background">
-                                        <AvatarImage src={`https://github.com/${dev.name}.png`} alt={dev.name} data-ai-hint="person avatar"/>
-                                        <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                    <Avatar key={dev.github_username} className="inline-block border-2 border-background">
+                                        <AvatarImage src={`https://github.com/${dev.github_username}.png`} alt={dev.github_username} data-ai-hint="person avatar"/>
+                                        <AvatarFallback>{dev.github_username.charAt(0).toUpperCase()}</AvatarFallback>
                                     </Avatar>
                                 ))}
                             </div>
@@ -162,14 +162,14 @@ export function DashboardView({
                     </div>
                     <ul className="mt-4 space-y-2 text-sm">
                     {analysisResult.team.slice(0,3).map(dev => (
-                        <li key={dev.name} className="flex items-start gap-2">
+                        <li key={dev.github_username} className="flex items-start gap-2">
                         <Avatar className="w-5 h-5 mt-1">
-                            <AvatarImage src={`https://github.com/${dev.name}.png`} alt={dev.name} data-ai-hint="person avatar small"/>
-                            <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                            <AvatarImage src={`https://github.com/${dev.github_username}.png`} alt={dev.github_username} data-ai-hint="person avatar small"/>
+                            <AvatarFallback>{dev.github_username.charAt(0).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div>
-                            <span className="font-medium">{dev.name}</span>
-                            <p className="text-muted-foreground text-xs">{dev.skills.join(', ')}</p>
+                            <span className="font-medium">{dev.github_username}</span>
+                            <p className="text-muted-foreground text-xs">{dev.skills_domains.join(', ')}</p>
                         </div>
                         </li>
                     ))}
@@ -219,13 +219,13 @@ export function DashboardView({
                             </SelectTrigger>
                             <SelectContent>
                               {analysisResult.team.map((dev) => (
-                                <SelectItem key={dev.name} value={dev.name}>
+                                <SelectItem key={dev.github_username} value={dev.github_username}>
                                   <div className="flex items-center gap-2">
                                     <Avatar className="w-6 h-6">
-                                      <AvatarImage src={`https://github.com/${dev.name}.png`} alt={dev.name} data-ai-hint="person avatar small"/>
-                                      <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                      <AvatarImage src={`https://github.com/${dev.github_username}.png`} alt={dev.github_username} data-ai-hint="person avatar small"/>
+                                      <AvatarFallback>{dev.github_username.charAt(0).toUpperCase()}</AvatarFallback>
                                     </Avatar>
-                                    <span>{dev.name}</span>
+                                    <span>{dev.github_username}</span>
                                   </div>
                                 </SelectItem>
                               ))}
@@ -255,7 +255,7 @@ export function DashboardView({
                                     <div key={index} className="flex items-start gap-3">
                                         <Avatar className="w-8 h-8 mt-1">
                                             <AvatarImage src={`https://github.com/${update.developerName}.png`} alt={update.developerName} data-ai-hint="person avatar small"/>
-                                            <AvatarFallback>{update.developerName.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                            <AvatarFallback>{update.developerName.charAt(0).toUpperCase()}</AvatarFallback>
                                         </Avatar>
                                         <div>
                                             <p className="text-sm font-medium">{update.developerName}</p>
@@ -285,15 +285,15 @@ export function DashboardView({
                 <CardContent>
                     <ul className="space-y-4">
                         {analysisResult.team.slice(0, 5).map((dev) => (
-                            <li key={dev.name} className="flex items-center justify-between">
+                            <li key={dev.github_username} className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <Avatar className="w-9 h-9">
-                                        <AvatarImage src={`https://github.com/${dev.name}.png`} alt={dev.name} data-ai-hint="person avatar small"/>
-                                        <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                        <AvatarImage src={`https://github.com/${dev.github_username}.png`} alt={dev.github_username} data-ai-hint="person avatar small"/>
+                                        <AvatarFallback>{dev.github_username.charAt(0).toUpperCase()}</AvatarFallback>
                                     </Avatar>
                                     <div>
-                                        <p className="font-medium text-sm">{dev.name}</p>
-                                        <p className="text-xs text-muted-foreground">{dev.skills.slice(0, 2).join(', ')}</p>
+                                        <p className="font-medium text-sm">{dev.github_username}</p>
+                                        <p className="text-xs text-muted-foreground">{dev.skills_domains.slice(0, 2).join(', ')}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-1 text-yellow-400">

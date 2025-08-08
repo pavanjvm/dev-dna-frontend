@@ -93,7 +93,7 @@ export function SetupView({
     const renderBreakdownSetupStep = () => {
         if (!analysisResult) return null;
         const filteredDevelopers = analysisResult.team.filter(dev => 
-            dev.name.toLowerCase().includes(searchQuery.toLowerCase())
+            dev.github_username.toLowerCase().includes(searchQuery.toLowerCase())
         );
 
         const handleAddDeveloper = (part: string, devName: string) => {
@@ -132,16 +132,16 @@ export function SetupView({
                                             <div className="space-y-2 min-h-[6rem]">
                                                 {(assignedDevelopers[part.part] || []).map(devName => {
                                                     const isSuggested = devName === part.suggestedDeveloper;
-                                                    const developer = analysisResult.team.find(d => d.name === devName);
+                                                    const developer = analysisResult.team.find(d => d.github_username === devName);
                                                     return (
                                                         <div key={devName} className="p-2 bg-background/50 rounded-lg">
                                                             <div className="flex items-center justify-between">
                                                                 <div className="flex items-center gap-2">
                                                                     <Avatar className="w-8 h-8">
                                                                         <AvatarImage src={`https://github.com/${devName}.png`} alt={devName} data-ai-hint="person avatar"/>
-                                                                        <AvatarFallback>{devName.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                                                        <AvatarFallback>{devName.charAt(0).toUpperCase()}</AvatarFallback>
                                                                     </Avatar>
-                                                                    <span className="font-medium text-sm">{developer?.name}</span>
+                                                                    <span className="font-medium text-sm">{developer?.github_username}</span>
                                                                 </div>
                                                                 <Button size="sm" variant="ghost" onClick={() => handleRemoveDeveloper(part.part, devName)}>Remove</Button>
                                                             </div>
@@ -186,17 +186,17 @@ export function SetupView({
                                             <ScrollArea className="h-48">
                                                 <div className="space-y-1 p-2">
                                                 {filteredDevelopers
-                                                  .filter(dev => !(assignedDevelopers[part.part] || []).includes(dev.name))
+                                                  .filter(dev => !(assignedDevelopers[part.part] || []).includes(dev.github_username))
                                                   .map(dev => (
-                                                    <Tooltip key={dev.name} delayDuration={300}>
+                                                    <Tooltip key={dev.github_username} delayDuration={300}>
                                                       <TooltipTrigger asChild>
-                                                        <div className="flex items-center justify-between p-2 rounded-md hover:bg-secondary cursor-pointer" onClick={() => handleAddDeveloper(part.part, dev.name)}>
+                                                        <div className="flex items-center justify-between p-2 rounded-md hover:bg-secondary cursor-pointer" onClick={() => handleAddDeveloper(part.part, dev.github_username)}>
                                                             <div className="flex items-center gap-2">
                                                                 <Avatar className="w-6 h-6">
-                                                                    <AvatarImage src={`https://github.com/${dev.name}.png`} alt={dev.name} data-ai-hint="person avatar small"/>
-                                                                    <AvatarFallback>{dev.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                                                    <AvatarImage src={`https://github.com/${dev.github_username}.png`} alt={dev.github_username} data-ai-hint="person avatar small"/>
+                                                                    <AvatarFallback>{dev.github_username.charAt(0).toUpperCase()}</AvatarFallback>
                                                                 </Avatar>
-                                                                <span className="text-sm font-medium">{dev.name}</span>
+                                                                <span className="text-sm font-medium">{dev.github_username}</span>
                                                             </div>
                                                             <Button variant="ghost" size="sm"><UserPlus className="h-4 w-4"/></Button>
                                                         </div>
@@ -204,7 +204,7 @@ export function SetupView({
                                                       <TooltipContent side="right" align="center">
                                                         <p className="font-semibold">Top Skills</p>
                                                         <ul className="list-disc list-inside text-muted-foreground">
-                                                          {dev.skills.slice(0, 3).map(skill => <li key={skill}>{skill}</li>)}
+                                                          {dev.skills_domains.slice(0, 3).map(skill => <li key={skill}>{skill}</li>)}
                                                         </ul>
                                                       </TooltipContent>
                                                     </Tooltip>
