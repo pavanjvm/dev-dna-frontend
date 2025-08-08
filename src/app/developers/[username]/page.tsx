@@ -39,7 +39,7 @@ export default function DeveloperProfilePage({ params }: PageParams) {
 
     useEffect(() => {
         if (username) {
-            const devData = getDeveloperByUsername(username);
+            const devData = getDeveloperByUsername(username as string);
             if (devData) {
                 setDeveloper(devData);
                 // Simple activity score calculation
@@ -225,4 +225,5 @@ export default function DeveloperProfilePage({ params }: PageParams) {
             </main>
         </div>
     );
-}
+
+    
